@@ -7,12 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.20" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
     <PackageReference Include="QRCoder" Version="1.7.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\EVCS.DataAccess\EVCS.DataAccess.csproj" />
-    <ProjectReference Include="..\EVCS.Models\EVCS.Models.csproj" />
   </ItemGroup>
 
 </Project>

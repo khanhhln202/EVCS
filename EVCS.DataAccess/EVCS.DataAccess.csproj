@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EVCS.Models\EVCS.Models.csproj" />
+    <ProjectReference Include="..\EVCS.Utility\EVCS.Utility.csproj" />
   </ItemGroup>
 
 </Project>

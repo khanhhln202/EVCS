@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36408.4 d17.14
+VisualStudioVersion = 17.14.36408.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EVCS.Web", "EVCS.Web\EVCS.Web.csproj", "{23756BFD-28FC-42B7-AAE5-A46FC8AB8FCD}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EVCS.Models", "EVCS.Models\EVCS.Models.csproj", "{886A0C6D-C3FD-4779-ABE0-921874B722BD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EVCS.Utility", "EVCS.Utility\EVCS.Utility.csproj", "{91C99B8C-BFFE-4069-901E-F7339321FF2D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EVCS.Services", "EVCS.Services\EVCS.Services.csproj", "{4A95D1F9-358E-44F3-9507-7E3580EC898D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{91C99B8C-BFFE-4069-901E-F7339321FF2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91C99B8C-BFFE-4069-901E-F7339321FF2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91C99B8C-BFFE-4069-901E-F7339321FF2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A95D1F9-358E-44F3-9507-7E3580EC898D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A95D1F9-358E-44F3-9507-7E3580EC898D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A95D1F9-358E-44F3-9507-7E3580EC898D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A95D1F9-358E-44F3-9507-7E3580EC898D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
