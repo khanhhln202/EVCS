@@ -32,10 +32,12 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(opt =>
     opt.Password.RequiredLength = 6;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders();
+.AddDefaultTokenProviders()
+.AddDefaultUI();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages(); // Add Razor Pages support for Identity UI
 
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
@@ -93,4 +95,5 @@ app.MapControllerRoute(
 name: "default",
 pattern: "{controller=Home}/{action=Index}/{id?}");
 
+app.MapRazorPages(); // Map Razor Pages for Identity UI
 app.Run();

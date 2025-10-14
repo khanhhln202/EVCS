@@ -1,91 +1,105 @@
 ﻿@{
     ViewData["Title"] = "Charging Stations Map";
 }
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+@section Styles {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <style>
+        #map {
+            height: 76vh;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 1rem;
+        }
+    </style>
+}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<div class="container-fluid">
-    <div class="row g-3">
-        <div class="col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Filters</h5>
-                    <div class="mb-2">
-                        <label class="form-label">City</label>
-                        <input id="f-city" class="form-control" placeholder="Hanoi, HCMC..." />
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">Connector</label>
-                        <select id="f-connector" class="form-select">
-                            <option value="">Any</option>
-                            <option>Type2</option>
-                            <option>CCS2</option>
-                            <option>CHAdeMO</option>
-                        </select>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="f-opennow" />
-                        <label class="form-check-label" for="f-opennow">Open now</label>
-                    </div>
-                    <button class="btn btn-primary w-100" id="btn-search">Search</button>
+
+
+<div class="row g-3">
+    <div class="col-lg-3">
+        <div class="card shadow-sm sidebar">
+            <div class="card-body">
+                <h5 class="card-title">Find a station</h5>
+                <div class="mb-2">
+                    <label class="form-label">City</label>
+                    <input id="f-city" class="form-control" placeholder="Hanoi, HCMC..." />
                 </div>
-            </div>
-            <div class="card shadow-sm mt-3">
-                <div class="card-body">
-                    <h6 class="card-title">Legend</h6>
-                    <div><span class="badge bg-success">Online</span> <span class="badge bg-secondary">Offline</span></div>
+                <div class="mb-2">
+                    <label class="form-label">Connector</label>
+                    <select id="f-connector" class="form-select">
+                        <option value="">Any</option>
+                        <option>Type2</option>
+                        <option>CCS2</option>
+                        <option>CHAdeMO</option>
+                    </select>
                 </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="f-opennow" />
+                    <label class="form-check-label" for="f-opennow">Open now</label>
+                </div>
+                <button class="btn btn-primary w-100" id="btn-search"><i class="bi bi-search"></i> Search</button>
             </div>
         </div>
-        <div class="col-lg-9">
-            <div id="map" style="height: 75vh; border-radius: 0.5rem; box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,.05);"></div>
-            <div class="mt-2 small text-muted" id="result-count"></div>
-        </div>
+        <div class="small text-muted mt-2" id="result-count"></div>
+    </div>
+    <div class="col-lg-9">
+        <div id="map" class="shadow-sm"></div>
     </div>
 </div>
-
-<script>
-    const map = L.map('map').setView([10.8231, 106.6297], 12); // HCMC default
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
+@section Scripts {
+    <script>
+        const map = L.map('map').setView([10.8231, 106.6297], 12); // HCMC default
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
 
 
-    let markers = [];
-    function clearMarkers() { markers.forEach(m => map.removeLayer(m)); markers = []; }
+        let markers = [];
+        function clearMarkers() { markers.forEach(m => map.removeLayer(m)); markers = []; }
 
 
-    async function loadData() {
-    const city = document.getElementById('f-city').value.trim();
-    const connectorType = document.getElementById('f-connector').value;
-    const openNow = document.getElementById('f-opennow').checked;
-    const url = new URL(window.location.origin + '/Stations/MapData');
-    if (city) url.searchParams.set('city', city);
-    if (connectorType) url.searchParams.set('connectorType', connectorType);
-    if (openNow) url.searchParams.set('openNow', 'true');
+        function markerHtml(name, city, ports){
+        const lines = (ports||[]).map(p => `<div><i class='bi bi-plug'></i> ${p.connectorType ?? 'N/A'} · ${Number(p.pricePerKwh).toLocaleString()} ₫/kWh</div>`).join('');
+        return `<div><strong>${name}</strong><div class='text-muted small'>${city ?? ''}</div><hr class='my-1'/>${lines || 'No ports'}</div>`;
+        }
 
 
-    const res = await fetch(url);
-    const data = await res.json();
+        async function loadData(){
+        const btn = document.getElementById('btn-search');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
 
 
-    clearMarkers();
-    let bounds = [];
-    data.forEach(s => {
-    if (s.lat && s.lng) {
-    const html = `<div><strong>${s.name}</strong><br/><small>${s.city ?? ''}</small><hr class='my-1'/>` +
-    (s.ports && s.ports.length ? s.ports.map(p => `${p.connectorType ?? 'N/A'}: ${p.pricePerKwh.toLocaleString()} ₫/kWh`).join('<br/>') : 'No ports') + `</div>`;
-    const marker = L.marker([s.lat, s.lng], { title: s.name }).bindPopup(html);
-    marker.addTo(map); markers.push(marker); bounds.push([s.lat, s.lng]);
-    }
-    });
+        const city = document.getElementById('f-city').value.trim();
+        const connectorType = document.getElementById('f-connector').value;
+        const openNow = document.getElementById('f-opennow').checked;
+        const url = new URL(window.location.origin + '/Stations/MapData');
+        if (city) url.searchParams.set('city', city);
+        if (connectorType) url.searchParams.set('connectorType', connectorType);
+        if (openNow) url.searchParams.set('openNow', 'true');
 
 
-    document.getElementById('result-count').innerText = `${data.length} station(s) found`;
-    if (bounds.length) map.fitBounds(bounds, { padding: [30, 30] });
-    }
+        try {
+        const res = await fetch(url);
+        const data = await res.json();
+        clearMarkers();
+        const bounds = [];
+        data.forEach(s => {
+        if (s.lat && s.lng) {
+        const m = L.marker([s.lat, s.lng], { title: s.name }).bindPopup(markerHtml(s.name, s.city, s.ports));
+        m.addTo(map); markers.push(m); bounds.push([s.lat, s.lng]);
+        }
+        });
+        document.getElementById('result-count').innerText = `${data.length} station(s) found`;
+        if (bounds.length) map.fitBounds(bounds, { padding: [30,30] });
+        } catch(ex) {
+        toastr.error('Failed to load map data');
+        } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="bi bi-search"></i> Search';
+        }
+        }
 
 
-    document.getElementById('btn-search').addEventListener('click', loadData);
-    loadData();
-</script>
+        document.getElementById('btn-search').addEventListener('click', loadData);
+        loadData();
+    </script>
+}

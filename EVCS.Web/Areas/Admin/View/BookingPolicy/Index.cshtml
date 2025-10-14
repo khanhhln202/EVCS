@@ -1,35 +1,51 @@
-﻿@model EVCS.Services.DTOs.BookingPolicyDto
+﻿@model BookingPolicyDto
 @{
     ViewData["Title"] = "Booking Policy";
 }
-<h2>Booking Policy</h2>
+<h2 class="mb-3"><i class="bi bi-shield-check"></i> Booking Policy</h2>
+<partial name="_ValidationSummary" />
 <form method="post" class="row g-3 mt-2">
     <input type="hidden" asp-for="Id" />
     <div class="col-md-3">
-        <label asp-for="AcDeposit" class="form-label"></label>
-        <input asp-for="AcDeposit" class="form-control" />
+        <div class="form-floating">
+            <input asp-for="AcDeposit" class="form-control" />
+            <label asp-for="AcDeposit"></label>
+        </div>
     </div>
     <div class="col-md-3">
-        <label asp-for="DcDeposit" class="form-label"></label>
-        <input asp-for="DcDeposit" class="form-control" />
+        <div class="form-floating">
+            <input asp-for="DcDeposit" class="form-control" />
+            <label asp-for="DcDeposit"></label>
+        </div>
     </div>
     <div class="col-md-2">
-        <label asp-for="HoldMinutes" class="form-label"></label>
-        <input asp-for="HoldMinutes" class="form-control" />
+        <div class="form-floating">
+            <input asp-for="HoldMinutes" class="form-control" />
+            <label asp-for="HoldMinutes"></label>
+        </div>
     </div>
     <div class="col-md-2">
-        <label asp-for="CancelFullRefundMinutes" class="form-label"></label>
-        <input asp-for="CancelFullRefundMinutes" class="form-control" />
+        <div class="form-floating">
+            <input asp-for="CancelFullRefundMinutes" class="form-control" />
+            <label asp-for="CancelFullRefundMinutes"></label>
+        </div>
     </div>
     <div class="col-md-2">
-        <label asp-for="CancelPartialRefundMinutes" class="form-label"></label>
-        <input asp-for="CancelPartialRefundMinutes" class="form-control" />
+        <div class="form-floating">
+            <input asp-for="CancelPartialRefundMinutes" class="form-control" />
+            <label asp-for="CancelPartialRefundMinutes"></label>
+        </div>
     </div>
     <div class="col-md-2">
-        <label asp-for="NoShowPenaltyPercent" class="form-label"></label>
-        <input asp-for="NoShowPenaltyPercent" class="form-control" />
+        <div class="form-floating">
+            <input asp-for="NoShowPenaltyPercent" class="form-control" />
+            <label asp-for="NoShowPenaltyPercent"></label>
+        </div>
     </div>
     <div class="col-12">
-        <button class="btn btn-primary">Save</button>
+        <button class="btn btn-primary"><i class="bi bi-save"></i> Save</button>
     </div>
 </form>
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

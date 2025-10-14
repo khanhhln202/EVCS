@@ -7,8 +7,13 @@ namespace EVCS.Web.Controllers
     public class StationsController : Controller
     {
         private readonly IStationService _svc;
-        public StationsController(IStationService svc) { _svc = svc; }
+        private readonly IStationQueryService _query;
 
+        public StationsController(IStationService svc, IStationQueryService query)
+        {
+            _svc = svc;
+            _query = query;
+        }
 
         public async Task<IActionResult> Index(string? city)
         {
@@ -16,12 +21,7 @@ namespace EVCS.Web.Controllers
             return View(data);
         }
 
-        private readonly IStationQueryService _query;
-        public StationsController(IStationService svc, IStationQueryService query) { _svc = svc; _query = query; }
-
-
         public IActionResult Map() => View();
-
 
         [HttpGet]
         public async Task<IActionResult> MapData([FromQuery] string? city, [FromQuery] string? connectorType, [FromQuery] bool? openNow)
