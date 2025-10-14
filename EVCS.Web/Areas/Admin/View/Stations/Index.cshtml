@@ -1,0 +1,35 @@
+﻿@model IEnumerable<EVCS.Services.DTOs.StationListAdminDto>
+@{
+    ViewData["Title"] = "Stations";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Stations</h2>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> New Station</a>
+</div>
+
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+    @foreach (var s in Model)
+    {
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="card-title">@s.Name</h5>
+                        <span class="badge @(s.Online ? "bg-success" : "bg-secondary")">@(s.Online ? "Online" : "Offline")</span>
+                    </div>
+                    <div class="text-muted small">Code: <strong>@s.Code</strong> • City: @s.City</div>
+                    <div class="mt-2">Chargers: <strong>@s.Chargers</strong> • Ports: <strong>@s.Ports</strong></div>
+                </div>
+                <div class="card-footer bg-white border-0 d-flex gap-2">
+                    <a asp-area="Admin" asp-controller="ChargerUnits" asp-action="Index" asp-route-stationId="@s.Id" class="btn btn-outline-primary btn-sm">Manage Chargers</a>
+                    <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-primary btn-sm">Edit</a>
+                    <form asp-action="Delete" method="post" onsubmit="return confirm('Delete this station?');" class="ms-auto">
+                        <input type="hidden" name="id" value="@s.Id" />
+                        <button class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,30 @@
+﻿@model EVCS.Services.DTOs.ConnectorPortUpsertDto
+<div class="row g-3">
+    <input type="hidden" asp-for="ChargerId" />
+    <div class="col-md-2">
+        <label asp-for="IndexNo" class="form-label"></label>
+        <input asp-for="IndexNo" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label asp-for="ConnectorType" class="form-label"></label>
+        <select asp-for="ConnectorType" class="form-select">
+            <option value="">(None)</option>
+            <option>Type2</option>
+            <option>CCS2</option>
+            <option>CHAdeMO</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="MaxPowerKw" class="form-label"></label>
+        <input asp-for="MaxPowerKw" class="form-control" />
+    </div>
+    <div class="col-md-4">
+        <label asp-for="DefaultPricePerKwh" class="form-label"></label>
+        <input asp-for="DefaultPricePerKwh" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label asp-for="Status" class="form-label"></label>
+        <select asp-for="Status" asp-items="Html.GetEnumSelectList<EVCS.Models.Enums.ConnectorPortStatus>()" class="form-select"></select>
+    </div>
+    <input type="hidden" asp-for="RowVersion" />
+</div>

@@ -1,0 +1,13 @@
+﻿@model EVCS.Services.DTOs.ChargerUnitUpsertDto
+@{
+    ViewData["Title"] = "Edit Charger";
+}
+<h2>Edit Charger</h2>
+<form asp-action="Edit" method="post" class="mt-3">
+    <input type="hidden" asp-for="Id" />
+    <partial name="_Form" />
+    <div class="mt-3 d-flex gap-2">
+        <button class="btn btn-primary">Update</button>
+        <a asp-action="Index" asp-route-stationId="@Model.StationId" class="btn btn-outline-secondary">Back</a>
+    </div>
+</form>

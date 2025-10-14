@@ -1,0 +1,26 @@
+﻿@model EVCS.Services.DTOs.ChargerUnitUpsertDto
+<div class="row g-3">
+    <input type="hidden" asp-for="StationId" />
+    <div class="col-md-6">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="Type" class="form-label"></label>
+        <select asp-for="Type" class="form-select">
+            <option value="">(None)</option>
+            <option>AC</option>
+            <option>DC</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="MaxPowerKw" class="form-label"></label>
+        <input asp-for="MaxPowerKw" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label asp-for="Status" class="form-label"></label>
+        <select asp-for="Status" asp-items="Html.GetEnumSelectList<EVCS.Models.Enums.ChargerStatus>()" class="form-select"></select>
+    </div>
+    <input type="hidden" asp-for="RowVersion" />
+</div>

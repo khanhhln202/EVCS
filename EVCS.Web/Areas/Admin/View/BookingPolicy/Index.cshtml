@@ -1,0 +1,35 @@
+﻿@model EVCS.Services.DTOs.BookingPolicyDto
+@{
+    ViewData["Title"] = "Booking Policy";
+}
+<h2>Booking Policy</h2>
+<form method="post" class="row g-3 mt-2">
+    <input type="hidden" asp-for="Id" />
+    <div class="col-md-3">
+        <label asp-for="AcDeposit" class="form-label"></label>
+        <input asp-for="AcDeposit" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label asp-for="DcDeposit" class="form-label"></label>
+        <input asp-for="DcDeposit" class="form-control" />
+    </div>
+    <div class="col-md-2">
+        <label asp-for="HoldMinutes" class="form-label"></label>
+        <input asp-for="HoldMinutes" class="form-control" />
+    </div>
+    <div class="col-md-2">
+        <label asp-for="CancelFullRefundMinutes" class="form-label"></label>
+        <input asp-for="CancelFullRefundMinutes" class="form-control" />
+    </div>
+    <div class="col-md-2">
+        <label asp-for="CancelPartialRefundMinutes" class="form-label"></label>
+        <input asp-for="CancelPartialRefundMinutes" class="form-control" />
+    </div>
+    <div class="col-md-2">
+        <label asp-for="NoShowPenaltyPercent" class="form-label"></label>
+        <input asp-for="NoShowPenaltyPercent" class="form-control" />
+    </div>
+    <div class="col-12">
+        <button class="btn btn-primary">Save</button>
+    </div>
+</form>

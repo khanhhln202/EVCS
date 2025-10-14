@@ -1,0 +1,33 @@
+﻿@model IEnumerable<EVCS.Services.DTOs.ConnectorPortUpsertDto>
+@{
+    ViewData["Title"] = "Ports"; var chargerId = (Guid)ViewBag.ChargerId;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Ports</h2>
+    <a class="btn btn-primary" asp-action="Create" asp-route-chargerId="@chargerId">New Port</a>
+</div>
+<table class="table table-hover align-middle">
+    <thead>
+        <tr><th>#</th><th>Type</th><th>Max kW</th><th>Price/kWh</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.IndexNo</td>
+                <td>@p.ConnectorType</td>
+                <td>@p.MaxPowerKw</td>
+                <td>@p.DefaultPricePerKwh.ToString("N0")</td>
+                <td><span class="badge @(p.Status == EVCS.Models.Enums.ConnectorPortStatus.Available ? "bg-success" : "bg-secondary")">@p.Status</span></td>
+                <td class="text-end">
+                    <a class="btn btn-primary btn-sm" asp-action="Edit" asp-route-id="@p.Id">Edit</a>
+                    <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Delete port?');">
+                        <input type="hidden" name="id" value="@p.Id" />
+                        <input type="hidden" name="chargerId" value="@chargerId" />
+                        <button class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,4 +1,5 @@
 ﻿using EVCS.Services.Interfaces;
+using EVCS.Services.Query;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EVCS.Web.Controllers
@@ -13,6 +14,20 @@ namespace EVCS.Web.Controllers
         {
             var data = await _svc.GetOnlineStationsAsync(city);
             return View(data);
+        }
+
+        private readonly IStationQueryService _query;
+        public StationsController(IStationService svc, IStationQueryService query) { _svc = svc; _query = query; }
+
+
+        public IActionResult Map() => View();
+
+
+        [HttpGet]
+        public async Task<IActionResult> MapData([FromQuery] string? city, [FromQuery] string? connectorType, [FromQuery] bool? openNow)
+        {
+            var data = await _query.SearchAsync(new StationSearchCriteria { City = city, ConnectorType = connectorType, OpenNow = openNow });
+            return Json(data);
         }
     }
 }
