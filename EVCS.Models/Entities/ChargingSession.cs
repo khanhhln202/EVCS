@@ -26,7 +26,7 @@ namespace EVCS.Models.Entities
 
         // Started|Ended|Settled
         [MaxLength(16)]
-        public string Status { get; set; } = "Started";
+        public SessionStatus Status { get; set; } = SessionStatus.Started;
 
         [MaxLength(512)]
         public string? Notes { get; set; }

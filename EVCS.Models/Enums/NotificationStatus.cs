@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace EVCS.Models.Enums
 {
-    public enum PaymentStatus { Created, Paid, Failed, Expired }
+    public enum NotificationStatus { Pending, Sent, Delivered, Read }
 }

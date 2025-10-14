@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace EVCS.Models.Enums
 {
-    public enum BookingStatus { Pending, Confirmed, CheckedIn, Cancelled, NoShow }
+    public enum BookingStatus { Pending, Confirmed, CheckedIn, Cancelled, NoShow, Completed }
 }

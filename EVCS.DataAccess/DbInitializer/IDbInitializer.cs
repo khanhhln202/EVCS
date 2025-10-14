@@ -6,5 +6,8 @@ using System.Threading.Tasks;
 
 namespace EVCS.DataAccess.DbInitializer
 {
-    public interface IDbInitializer { void Initialize(); }
+    public interface IDbInitializer
+    {
+        Task InitializeAsync();
+    }
 }

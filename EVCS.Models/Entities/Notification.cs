@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EVCS.Models.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -10,23 +11,14 @@ namespace EVCS.Models.Entities
     public class Notification
     {
         public Guid Id { get; set; }
-
-        public Guid UserId { get; set; }               
-
-        [MaxLength(200)]
-        public string Title { get; set; } = default!;
+        public Guid UserId { get; set; }
+        [Required, MaxLength(200)] public string Title { get; set; } = default!;
         public string? Body { get; set; }
 
-        // Channel: App|Email|SMS
-        [MaxLength(16)]
-        public string Channel { get; set; } = "App";
+        public NotificationChannel Channel { get; set; } = NotificationChannel.App;
+        public NotificationStatus Status { get; set; } = NotificationStatus.Pending;
 
-        // Status: Pending|Sent|Delivered|Read
-        [MaxLength(16)]
-        public string Status { get; set; } = "Pending";
-
-        [MaxLength(64)]
-        public string? RelatedEntityType { get; set; }
+        [MaxLength(64)] public string? RelatedEntityType { get; set; }
         public Guid? RelatedEntityId { get; set; }
 
         public DateTime? SentAt { get; set; }
@@ -37,6 +29,6 @@ namespace EVCS.Models.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
-        [Timestamp] public byte[]? RowVersion { get; set; }
+        [Timestamp] public byte[] RowVersion { get; set; } = Array.Empty<byte>();
     }
 }

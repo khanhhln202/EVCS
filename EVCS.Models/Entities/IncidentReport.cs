@@ -10,18 +10,14 @@ namespace EVCS.Models.Entities
     public class IncidentReport
     {
         public Guid Id { get; set; }
+        public Guid StationId { get; set; }
+        public Guid? ConnectorPortId { get; set; }
+        public Guid ReportedByUserId { get; set; }
 
-        public Guid StationId { get; set; }            
-        public Guid? ConnectorPortId { get; set; }     
-        public Guid ReportedByUserId { get; set; }     
-
-        [MaxLength(200)]
-        public string Title { get; set; } = default!;
+        [Required, MaxLength(200)] public string Title { get; set; } = default!;
         public string? Description { get; set; }
 
-        [MaxLength(16)]
-        public string Status { get; set; } = "Open";
-
+        [MaxLength(16)] public string Status { get; set; } = "Open";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? ResolvedAtUtc { get; set; }
     }

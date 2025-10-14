@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace EVCS.Models.Enums
 {
-    public enum ConnectorStatus { Available, Occupied, Offline, Faulted }
+    public enum PaymentProvider { VNPay, MoMo }
 }

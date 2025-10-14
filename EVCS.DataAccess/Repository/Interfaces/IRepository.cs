@@ -9,10 +9,10 @@ namespace EVCS.DataAccess.Repository.Interfaces
 {
     public interface IRepository<T> where T : class
     {
-        Task<T?> GetAsync(Expression<Func<T, bool>> filter, string? includeProps = null);
-        Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProps = null);
+        Task<T?> GetAsync(Expression<Func<T, bool>> filter, string? includeProperties = null, bool tracked = false);
+        Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null);
         Task AddAsync(T entity);
         void Remove(T entity);
-        Task<int> SaveChangesAsync(CancellationToken ct = default);
+        void RemoveRange(IEnumerable<T> entities);
     }
 }

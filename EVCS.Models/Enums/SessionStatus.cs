@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace EVCS.Models.Enums
 {
-    public enum SessionStatus { Started, Ended, Settled, Cancelled }
+    public enum SessionStatus { Started, Ended, Settled }
 }

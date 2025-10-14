@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using EVCS.Models.Entities;
+using EVCS.Services.DTOs;
 
 namespace EVCS.Web.MappingProfiles
 {
@@ -6,8 +8,8 @@ namespace EVCS.Web.MappingProfiles
     {
         public WebMappingProfile()
         {
-            // CreateMap<Station, StationVm>();
-            // TODO: thêm các mapping ViewModel khi build màn hình
+            CreateMap<Station, StationListItemDto>()
+                .ForCtorParam("Online", o => o.MapFrom(s => s.Status == EVCS.Models.Enums.StationStatus.Online));
         }
     }
 }

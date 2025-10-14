@@ -13,33 +13,46 @@ namespace EVCS.DataAccess.Repository
     public class Repository<T> : IRepository<T> where T : class
     {
         private readonly ApplicationDbContext _db;
-        private readonly DbSet<T> _set;
+        internal DbSet<T> dbSet;
+
+
         public Repository(ApplicationDbContext db)
         {
-            _db = db; _set = _db.Set<T>();
+            _db = db;
+            dbSet = _db.Set<T>();
         }
 
-        public async Task<T?> GetAsync(Expression<Func<T, bool>> filter, string? includeProps = null)
+
+        public async Task AddAsync(T entity) => await dbSet.AddAsync(entity);
+
+
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null)
         {
-            IQueryable<T> q = _set.Where(filter);
-            if (!string.IsNullOrWhiteSpace(includeProps))
-                foreach (var p in includeProps.Split(',', StringSplitOptions.RemoveEmptyEntries))
-                    q = q.Include(p.Trim());
-            return await q.FirstOrDefaultAsync();
+            IQueryable<T> query = dbSet;
+            if (filter != null) query = query.Where(filter);
+            if (!string.IsNullOrWhiteSpace(includeProperties))
+            {
+                foreach (var includeProp in includeProperties.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                    query = query.Include(includeProp.Trim());
+            }
+            return await query.ToListAsync();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProps = null)
+
+        public async Task<T?> GetAsync(Expression<Func<T, bool>> filter, string? includeProperties = null, bool tracked = false)
         {
-            IQueryable<T> q = _set;
-            if (filter != null) q = q.Where(filter);
-            if (!string.IsNullOrWhiteSpace(includeProps))
-                foreach (var p in includeProps.Split(',', StringSplitOptions.RemoveEmptyEntries))
-                    q = q.Include(p.Trim());
-            return await q.ToListAsync();
+            IQueryable<T> query = tracked ? dbSet : dbSet.AsNoTracking();
+            query = query.Where(filter);
+            if (!string.IsNullOrWhiteSpace(includeProperties))
+            {
+                foreach (var includeProp in includeProperties.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                    query = query.Include(includeProp.Trim());
+            }
+            return await query.FirstOrDefaultAsync();
         }
 
-        public async Task AddAsync(T entity) => await _set.AddAsync(entity);
-        public void Remove(T entity) => _set.Remove(entity);
-        public Task<int> SaveChangesAsync(CancellationToken ct = default) => _db.SaveChangesAsync(ct);
+
+        public void Remove(T entity) => dbSet.Remove(entity);
+        public void RemoveRange(IEnumerable<T> entities) => dbSet.RemoveRange(entities);
     }
 }

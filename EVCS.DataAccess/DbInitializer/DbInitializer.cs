@@ -1,50 +1,71 @@
 ﻿using EVCS.DataAccess.Data;
-using EVCS.DataAccess.Data.Identity;
-using EVCS.Models;
-using EVCS.Models.Enums;
-using EVCS.Utility;
+using EVCS.Models.Entities;
+using EVCS.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Collections.Specialized.BitVector32;
 
 namespace EVCS.DataAccess.DbInitializer
 {
-    public class DbSeeder
+    public class DbInitializer : IDbInitializer
     {
-        private readonly RoleManager<EvcsRole> _roleMgr;
-        private readonly UserManager<EvcsUser> _userMgr;
         private readonly ApplicationDbContext _db;
+        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public DbSeeder(RoleManager<EvcsRole> roleMgr, UserManager<EvcsUser> userMgr, ApplicationDbContext db)
-        { _roleMgr = roleMgr; _userMgr = userMgr; _db = db; }
-
-        public async Task SeedAsync()
+        public DbInitializer(ApplicationDbContext db, RoleManager<IdentityRole<Guid>> roleManager, UserManager<ApplicationUser> userManager)
         {
+            _db = db; _roleManager = roleManager; _userManager = userManager;
+        }
+
+
+        public async Task InitializeAsync()
+        {
+            // Apply migrations
             await _db.Database.MigrateAsync();
 
-            foreach (var r in new[] { "Admin", "Staff", "Driver" })
-                if (!await _roleMgr.RoleExistsAsync(r))
-                    await _roleMgr.CreateAsync(new EvcsRole { Name = r });
 
-            var adminEmail = "admin@evcs.local";
-            var admin = await _userMgr.FindByEmailAsync(adminEmail);
-            if (admin is null)
+            // Seed roles
+            var roles = new[] { "Admin", "Staff", "Driver" };
+            foreach (var r in roles)
             {
-                admin = new EvcsUser
+                if (!await _roleManager.RoleExistsAsync(r))
+                    await _roleManager.CreateAsync(new IdentityRole<Guid>(r));
+            }
+
+
+            // Seed admin user
+            var adminEmail = "admin@evcs.local";
+            var admin = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
+            if (admin == null)
+            {
+                admin = new ApplicationUser
                 {
-                    Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
-                    Email = adminEmail,
+                    Id = Guid.NewGuid(),
                     UserName = adminEmail,
-                    FullName = "EVCS Admin",
-                    EmailConfirmed = true
+                    Email = adminEmail,
+                    EmailConfirmed = true,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
                 };
-                await _userMgr.CreateAsync(admin, "Admin@12345");
-                await _userMgr.AddToRoleAsync(admin, "Admin");
+                await _userManager.CreateAsync(admin, "Admin!234");
+                await _userManager.AddToRoleAsync(admin, "Admin");
+            }
+
+
+            // Seed BookingPolicy (if none)
+            if (!await _db.BookingPolicies.AnyAsync())
+            {
+                await _db.BookingPolicies.AddAsync(new BookingPolicy
+                {
+                    AcDeposit = 30000m,
+                    DcDeposit = 50000m,
+                    HoldMinutes = 15,
+                    CancelFullRefundMinutes = 30,
+                    CancelPartialRefundMinutes = 30,
+                    NoShowPenaltyPercent = 100,
+                    CreatedAt = DateTime.UtcNow
+                });
+                await _db.SaveChangesAsync();
             }
         }
     }
