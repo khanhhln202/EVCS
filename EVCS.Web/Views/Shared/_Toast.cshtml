@@ -1,0 +1,13 @@
+﻿<script>
+    (function(){
+    toastr.options = { positionClass: 'toast-top-right', timeOut: 2500 };
+    @if (TempData["success"] is string s)
+    {
+        <text>toastr.success('@s');</text>
+    }
+    @if (TempData["error"] is string e)
+    {
+        <text>toastr.error('@e');</text>
+    }
+    })();
+</script>

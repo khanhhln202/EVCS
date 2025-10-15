@@ -3,8 +3,10 @@ using EVCS.DataAccess.DbInitializer;
 using EVCS.DataAccess.Repository;
 using EVCS.DataAccess.Repository.Interfaces;
 using EVCS.Models.Identity;
+using EVCS.Services.Admin;
 using EVCS.Services.Implementations;
 using EVCS.Services.Interfaces;
+using EVCS.Services.Query;
 using EVCS.Utility;
 using EVCS.Utility.Options;
 using Microsoft.AspNetCore.Identity;
@@ -30,10 +32,12 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(opt =>
     opt.Password.RequiredLength = 6;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders();
+.AddDefaultTokenProviders()
+.AddDefaultUI();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages(); // Add Razor Pages support for Identity UI
 
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
@@ -46,6 +50,12 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IStationService, StationService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IDbInitializer, DbInitializer>();
+
+builder.Services.AddScoped<IStationAdminService, StationAdminService>();
+builder.Services.AddScoped<IChargerAdminService, ChargerAdminService>();
+builder.Services.AddScoped<IConnectorPortAdminService, ConnectorPortAdminService>();
+builder.Services.AddScoped<IBookingPolicyService, BookingPolicyService>();
+builder.Services.AddScoped<IStationQueryService, StationQueryService>();
 
 var app = builder.Build();
 
@@ -85,4 +95,5 @@ app.MapControllerRoute(
 name: "default",
 pattern: "{controller=Home}/{action=Index}/{id?}");
 
+app.MapRazorPages(); // Map Razor Pages for Identity UI
 app.Run();
