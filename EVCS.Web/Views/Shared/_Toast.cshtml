@@ -1,13 +1,10 @@
-﻿<script>
-    (function(){
-    toastr.options = { positionClass: 'toast-top-right', timeOut: 2500 };
+﻿<div class="toast-container" aria-live="polite" aria-atomic="true">
     @if (TempData["success"] is string s)
     {
-        <text>toastr.success('@s');</text>
+        <div class="toast align-items-center text-bg-success border-0" role="alert"><div class="d-flex"><div class="toast-body"><i class="bi bi-check2-circle me-2"></i>@s</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>
     }
     @if (TempData["error"] is string e)
     {
-        <text>toastr.error('@e');</text>
+        <div class="toast align-items-center text-bg-danger border-0" role="alert"><div class="d-flex"><div class="toast-body"><i class="bi bi-exclamation-octagon me-2"></i>@e</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>
     }
-    })();
-</script>
+</div>

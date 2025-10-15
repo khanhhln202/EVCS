@@ -1,0 +1,50 @@
+﻿@model EVCS.Services.DTOs.StationUpsertDto
+<div class="row g-3">
+    <div class="col-md-4">
+        <label asp-for="Code" class="form-label"></label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-upc-scan"></i></span>
+            <input asp-for="Code" class="form-control" aria-describedby="codeHelp" />
+        </div>
+        <div id="codeHelp" class="form-text">Mã duy nhất (ví dụ: ST-HN-01)</div>
+        <span asp-validation-for="Code" class="text-danger"></span>
+    </div>
+    <div class="col-md-8">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="col-md-12">
+        <label asp-for="Address" class="form-label"></label>
+        <input asp-for="Address" class="form-control" />
+    </div>
+    <div class="col-md-4">
+        <label asp-for="City" class="form-label"></label>
+        <input asp-for="City" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label asp-for="TimezoneId" class="form-label"></label>
+        <input asp-for="TimezoneId" class="form-control" placeholder="Asia/Ho_Chi_Minh" />
+    </div>
+    <div class="col-md-2">
+        <label asp-for="OpenHour" class="form-label"></label>
+        <input asp-for="OpenHour" class="form-control" placeholder="08:00" />
+    </div>
+    <div class="col-md-2">
+        <label asp-for="CloseHour" class="form-label"></label>
+        <input asp-for="CloseHour" class="form-control" placeholder="22:00" />
+    </div>
+    <div class="col-md-3">
+        <label asp-for="Latitude" class="form-label"></label>
+        <input asp-for="Latitude" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label asp-for="Longitude" class="form-label"></label>
+        <input asp-for="Longitude" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label asp-for="Status" class="form-label"></label>
+        <select asp-for="Status" asp-items="Html.GetEnumSelectList<EVCS.Models.Enums.StationStatus>()" class="form-select"></select>
+    </div>
+    <input type="hidden" asp-for="RowVersion" />
+</div>

@@ -19,11 +19,14 @@ namespace EVCS.Web.Areas.Admin.Controllers
         { _svc = svc; _chargerSvc = chargerSvc; }
 
 
-        public async Task<IActionResult> Index(string? city)
+        public async Task<IActionResult> Index(string? city, int page = 1, int pageSize = 12)
         {
             var list = await _svc.GetAllAsync(city);
-            ViewBag.City = city;
-            return View(list);
+            var total = list.Count;
+            var items = list.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            ViewBag.Items = items;
+            ViewData["Title"] = "Trạm sạc";
+            return View(new EVCS.Web.ViewModels.PagedResult { Page = page, PageSize = pageSize, TotalCount = total, BasePath = Url.Action("Index")!, Query = Request.Query });
         }
 
 

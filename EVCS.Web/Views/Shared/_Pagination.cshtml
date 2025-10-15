@@ -1,0 +1,21 @@
+﻿@model EVCS.Web.ViewModels.PagedResult
+@{
+    int totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize); bool disabledPrev = Model.Page <= 1; bool disabledNext = Model.Page >= totalPages;
+}
+@if (totalPages > 1)
+{
+    <nav aria-label="Pagination">
+        <ul class="pagination justify-content-end">
+            <li class="page-item @(disabledPrev ? "disabled" : null)">
+                <a class="page-link" href="@Model.UrlForPage(Model.Page - 1)" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
+            </li>
+            @for (var i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(Model.Page == i ? "active" : null)"><a class="page-link" href="@Model.UrlForPage(i)">@i</a></li>
+            }
+            <li class="page-item @(disabledNext ? "disabled" : null)">
+                <a class="page-link" href="@Model.UrlForPage(Model.Page + 1)" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>
+            </li>
+        </ul>
+    </nav>
+}

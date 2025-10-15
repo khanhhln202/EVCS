@@ -1,0 +1,80 @@
+﻿@using EVCS.Services.DTOs
+@model EVCS.Web.ViewModels.PagedResult
+@{
+    var items = (IEnumerable<StationListAdminDto>)ViewBag.Items;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">@ViewData["Title"]</h2>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterCanvas" aria-controls="filterCanvas"><i class="bi bi-funnel"></i> Lọc</button>
+        <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> Thêm trạm</a>
+    </div>
+</div>
+<div class="offcanvas offcanvas-end" tabindex="-1"
+     id="filterCanvas" aria-labelledby="filterLabel"
+     data-bs-backdrop="true" data-bs-scroll="true">
+    <div class="offcanvas-header">
+        <h5 id="filterLabel"><i class="bi bi-funnel"></i> Bộ lọc</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form method="get" class="vstack gap-3">
+            <div>
+                <label class="form-label">Thành phố</label>
+                <input class="form-control" name="city" value="@Context.Request.Query["city"]" placeholder="Hà Nội, TP.HCM..." />
+                <div class="form-text">Lọc theo thành phố</div>
+            </div>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Áp dụng</button>
+        </form>
+    </div>
+</div>
+@if (!items.Any())
+{
+    <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+            <div class="display-6"><i class="bi bi-geo-alt text-primary"></i></div>
+            <h5 class="mt-2">Chưa có trạm</h5>
+            <p class="text-body-secondary">Hãy tạo trạm đầu tiên để bắt đầu vận hành.</p>
+            <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> Tạo trạm</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+        @foreach (var s in items)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="small text-body-secondary">@s.Code</div>
+                                <h5 class="card-title mb-1 text-truncate-1" title="@s.Name">@s.Name</h5>
+                                <div class="small text-body-secondary"><i class="bi bi-geo"></i> @s.City</div>
+                            </div>
+                            <span class="badge @(s.Online ? "text-bg-success" : "text-bg-secondary")">@(s.Online ? "Online" : "Offline")</span>
+                        </div>
+                        <div class="mt-3 d-flex gap-3 small">
+                            <div><i class="bi bi-cpu"></i> @s.Chargers <span class="text-body-secondary">bộ sạc</span></div>
+                            <div><i class="bi bi-plug"></i> @s.Ports <span class="text-body-secondary">cổng</span></div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-body d-flex gap-2">
+                        <a class="btn btn-outline-primary btn-sm" asp-area="Admin" asp-controller="ChargerUnits" asp-action="Index" asp-route-stationId="@s.Id"><i class="bi bi-hdd-network"></i> Thiết bị</a>
+                        <a class="btn btn-primary btn-sm" asp-action="Edit" asp-route-id="@s.Id"><i class="bi bi-pencil"></i> Sửa</a>
+                        <form id="form-del-@s.Id" asp-action="Delete" method="post" class="ms-auto">
+                            <input type="hidden" name="id" value="@s.Id" />
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" data-form="form-del-@s.Id"><i class="bi bi-trash"></i> Xoá</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @await Html.PartialAsync("_Pagination", Model)
+}
+
+
+@await Html.PartialAsync("_ConfirmDeleteModal")
