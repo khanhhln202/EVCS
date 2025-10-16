@@ -23,7 +23,21 @@ namespace EVCS.Web.Areas.Admin.Controllers
         {
             ViewBag.StationId = stationId;
             var list = await _svc.GetByStationAsync(stationId);
-            return View(list);
+
+            // Provide items via ViewBag to match the view
+            ViewBag.Items = list;
+
+            // Provide a PagedResult model to satisfy the view's @model
+            var model = new EVCS.Web.ViewModels.PagedResult
+            {
+                Page = 1,
+                PageSize = list.Count,
+                TotalCount = list.Count,
+                BasePath = Request.Path,     // keep clean path; stationId remains in Query
+                Query = Request.Query
+            };
+
+            return View(model);
         }
 
 

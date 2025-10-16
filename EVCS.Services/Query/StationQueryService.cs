@@ -17,36 +17,42 @@ namespace EVCS.Services.Query
         private readonly IMapper _mapper;
         public StationQueryService(ApplicationDbContext db, IMapper mapper) { _db = db; _mapper = mapper; }
 
-
         public async Task<IReadOnlyList<StationMapItemDto>> SearchAsync(StationSearchCriteria criteria)
         {
             var nowLocal = DateTime.Now; // UI địa phương; có thể dùng TimezoneId để chính xác hơn
             var q = _db.Stations.AsNoTracking().Where(s => !s.IsDeleted && s.Status == StationStatus.Online);
-            if (!string.IsNullOrWhiteSpace(criteria.City)) q = q.Where(s => s.City == criteria.City);
 
+            if (!string.IsNullOrWhiteSpace(criteria.City))
+                q = q.Where(s => s.City == criteria.City);
+
+            // Chỉ lấy các trạm có toạ độ hợp lệ cho Map
+            q = q.Where(s =>
+                s.Latitude != null && s.Longitude != null &&
+                s.Latitude >= -90 && s.Latitude <= 90 &&
+                s.Longitude >= -180 && s.Longitude <= 180);
 
             var list = await q.Select(s => new StationMapItemDto(
-            s.Id,
-            s.Code,
-            s.Name,
-            s.City,
-            s.Latitude,
-            s.Longitude,
-            s.Status == StationStatus.Online,
-            s.OpenHour != null && s.CloseHour != null ?
-            (TimeOnly.FromDateTime(nowLocal) >= s.OpenHour && TimeOnly.FromDateTime(nowLocal) <= s.CloseHour) : null,
-            _db.ConnectorPorts
-            .Where(p => !p.IsDeleted && _db.ChargerUnits.Any(c => c.Id == p.ChargerId && c.StationId == s.Id && !c.IsDeleted))
-            .Select(p => new PortStatusDto(p.ConnectorType, p.Status.ToString(), p.DefaultPricePerKwh))
-            .ToList()
+                s.Id,
+                s.Code,
+                s.Name,
+                s.City,
+                s.Latitude,
+                s.Longitude,
+                s.Status == StationStatus.Online,
+                s.OpenHour != null && s.CloseHour != null
+                    ? (TimeOnly.FromDateTime(nowLocal) >= s.OpenHour && TimeOnly.FromDateTime(nowLocal) <= s.CloseHour)
+                    : null,
+                _db.ConnectorPorts
+                    .Where(p => !p.IsDeleted && _db.ChargerUnits.Any(c => c.Id == p.ChargerId && c.StationId == s.Id && !c.IsDeleted))
+                    .Select(p => new PortStatusDto(p.ConnectorType, p.Status.ToString(), p.DefaultPricePerKwh))
+                    .ToList()
             )).ToListAsync();
-
 
             if (!string.IsNullOrWhiteSpace(criteria.ConnectorType))
                 list = list.Where(x => x.Ports.Any(p => (p.ConnectorType ?? "").Equals(criteria.ConnectorType, StringComparison.OrdinalIgnoreCase))).ToList();
+
             if (criteria.OpenNow == true)
                 list = list.Where(x => x.OpenNow == true).ToList();
-
 
             return list;
         }
