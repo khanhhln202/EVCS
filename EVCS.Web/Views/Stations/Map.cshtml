@@ -1,74 +1,121 @@
 ﻿@{
     ViewData["Title"] = "Bản đồ trạm sạc";
 }
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin />
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
 
-
-<div class="row g-3">
-    <div class="col-lg-3">
-        <div class="offcanvas offcanvas-start offcanvas-lg border-0 shadow-sm" tabindex="-1" id="filterCanvas" aria-labelledby="filterLabel">
-            <div class="offcanvas-header"><h5 id="filterLabel"><i class="bi bi-funnel"></i> Bộ lọc</h5><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button></div>
-            <div class="offcanvas-body">
-                <div class="vstack gap-3">
-                    <div><label class="form-label">Thành phố</label><input id="f-city" class="form-control" placeholder="TP.HCM, Hà Nội" /></div>
-                    <div><label class="form-label">Đầu nối</label><select id="f-connector" class="form-select"><option value="">Bất kỳ</option><option>Type2</option><option>CCS2</option><option>CHAdeMO</option></select></div>
-                    <div class="form-check"><input class="form-check-input" type="checkbox" id="f-opennow" /><label class="form-check-label" for="f-opennow">Đang mở cửa</label></div>
-                    <button class="btn btn-primary w-100" id="btn-search"><i class="bi bi-search"></i> Tìm kiếm</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-9">
-        <div class="d-flex justify-content-between align-items-center">
-            <button class="btn btn-outline-secondary d-lg-none mb-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterCanvas"><i class="bi bi-sliders"></i> Bộ lọc</button>
-            <div id="result-count" class="small text-body-secondary"></div>
-        </div>
-        <div id="map" class="skeleton h200" style="height: 70vh; border-radius: var(--radius);"></div>
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="mb-0">@ViewData["Title"]</h4>
+    <div class="d-flex gap-2 align-items-center">
+        <div id="result-count" class="small text-body-secondary"></div>
+        <button class="btn btn-outline-secondary"
+                type="button" data-bs-toggle="offcanvas" data-bs-target="#filterCanvas">
+            <i class="bi bi-sliders"></i> Bộ lọc
+        </button>
     </div>
 </div>
+
+<div id="map" style="height:70vh;border-radius:.75rem;"></div>
+
+<!-- Offcanvas overlay (desktop) -->
+<div class="offcanvas offcanvas-end border-0 shadow-sm"
+     id="filterCanvas" tabindex="-1" aria-labelledby="filterLabel"
+     data-bs-backdrop="true" data-bs-scroll="true"
+     style="--bs-offcanvas-width:420px">
+    <div class="offcanvas-header">
+        <h5 id="filterLabel" class="mb-0"><i class="bi bi-funnel"></i> Bộ lọc</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="vstack gap-3">
+            <div>
+                <label class="form-label">Thành phố</label>
+                <input id="f-city" class="form-control" placeholder="TP.HCM, Hà Nội" />
+            </div>
+            <div>
+                <label class="form-label">Đầu nối</label>
+                <select id="f-connector" class="form-select">
+                    <option value="">Bất kỳ</option>
+                    <option>Type2</option>
+                    <option>CCS2</option>
+                    <option>CHAdeMO</option>
+                </select>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="f-opennow" />
+                <label class="form-check-label" for="f-opennow">Đang mở cửa</label>
+            </div>
+            <button class="btn btn-primary w-100" id="btn-search">
+                <i class="bi bi-search"></i> Áp dụng
+            </button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
-        const numberVND = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
         document.addEventListener('DOMContentLoaded', () => {
-        const map = L.map('map').setView([10.8231, 106.6297], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
-        document.getElementById('map').classList.remove('skeleton');
+          const map = L.map('map').setView([10.8231, 106.6297], 12);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
 
+          const invalidate = () => setTimeout(() => map.invalidateSize(), 200); // chờ animation
+          window.addEventListener('resize', invalidate);
 
-        let markers = [];
-        const clearMarkers = () => { markers.forEach(m => map.removeLayer(m)); markers = []; };
-        async function loadData() {
-        const city = document.getElementById('f-city').value.trim();
-        const connectorType = document.getElementById('f-connector').value;
-        const openNow = document.getElementById('f-opennow').checked;
-        const url = new URL(window.location.origin + '/Stations/MapData');
-        if (city) url.searchParams.set('city', city);
-        if (connectorType) url.searchParams.set('connectorType', connectorType);
-        if (openNow) url.searchParams.set('openNow', 'true');
+          const canvasEl = document.getElementById('filterCanvas');
+          if (canvasEl) {
+            canvasEl.addEventListener('shown.bs.offcanvas', invalidate);
+            canvasEl.addEventListener('hidden.bs.offcanvas', invalidate);
+          }
 
+          const numberVND = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
-        const res = await fetch(url);
-        const data = await res.json();
-        document.getElementById('result-count').innerText = `${data.length} trạm phù hợp`;
+          let markers = [];
+          const clearMarkers = () => { markers.forEach(m => map.removeLayer(m)); markers = []; };
 
+          async function loadData() {
+            const city = document.getElementById('f-city').value.trim();
+            const connectorType = document.getElementById('f-connector').value;
+            const openNow = document.getElementById('f-opennow').checked;
 
-        clearMarkers();
-        let bounds = [];
-        data.forEach(s => {
-        if (s.lat && s.lng) {
-        const ports = (s.ports||[]).map(p => `${p.connectorType ?? 'N/A'}: ${numberVND.format(p.pricePerKwh)}`).join('<br/>');
-        const html = `<div class='small'><strong>${s.name}</strong><br/><span class='text-body-secondary'>${s.city ?? ''}</span><hr class='my-1'/>${ports || 'Chưa có cổng'}</div>`;
-        const marker = L.marker([s.lat, s.lng], { title: s.name, alt: s.name }).bindPopup(html, { minWidth: 220 });
-        marker.addTo(map); markers.push(marker); bounds.push([s.lat, s.lng]);
-        }
-        });
-        if (bounds.length) map.fitBounds(bounds, { padding: [24, 24] });
-        }
+            const url = new URL('/Stations/MapData', window.location.origin);
+            if (city) url.searchParams.set('city', city);
+            if (connectorType) url.searchParams.set('connectorType', connectorType);
+            if (openNow) url.searchParams.set('openNow', 'true');
 
+            let data = [];
+            try {
+              const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
+              data = res.ok ? await res.json() : [];
+            } catch { data = []; }
 
-        document.getElementById('btn-search').addEventListener('click', loadData);
-        loadData();
+            document.getElementById('result-count').innerText = `${data.length} trạm phù hợp`;
+
+            clearMarkers();
+            const bounds = [];
+            for (const s of data) {
+              if (s.lat != null && s.lng != null) {
+                const portsHtml = (s.ports || [])
+                  .map(p => `${p.connectorType ?? 'N/A'}: ${numberVND.format(p.pricePerKwh ?? 0)}`)
+                  .join('<br/>');
+                const html = `<div class='small'><strong>${s.name}</strong><br/>
+                              <span class='text-body-secondary'>${s.city ?? ''}</span>
+                              <hr class='my-1'/>${portsHtml || 'Chưa có cổng'}</div>`;
+                const marker = L.marker([s.lat, s.lng], { title: s.name })
+                                .bindPopup(html, { minWidth: 220 });
+                marker.addTo(map); markers.push(marker); bounds.push([s.lat, s.lng]);
+              }
+            }
+            if (bounds.length) map.fitBounds(bounds, { padding: [24, 24] });
+          }
+
+          document.getElementById('btn-search').addEventListener('click', async () => {
+            await loadData();
+            const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(canvasEl);
+            bsOffcanvas.hide();
+          });
+
+          loadData();
         });
     </script>
 }
