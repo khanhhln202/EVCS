@@ -1,0 +1,46 @@
+﻿@model EVCS.Services.DTOs.ChargerUnitUpsertDto
+<div class="row g-3">
+    <input type="hidden" asp-for="StationId" />
+    <input type="hidden" asp-for="RowVersion" />
+
+
+    <div class="col-md-6">
+        <label asp-for="Name" class="form-label"></label>
+        <div class="input-group has-validation">
+            <span class="input-group-text" aria-hidden="true"><i class="bi bi-hdd-network"></i></span>
+            <input asp-for="Name" class="form-control" aria-describedby="nameHelp" />
+        </div>
+        <div id="nameHelp" class="form-text">Tên hiển thị của bộ sạc (ví dụ: CU-01, Tầng hầm A, ...)</div>
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+
+    <div class="col-md-3">
+        <label asp-for="Type" class="form-label"></label>
+        <select asp-for="Type" class="form-select" aria-label="Loại sạc">
+            <option value="">(Không xác định)</option>
+            <option>AC</option>
+            <option>DC</option>
+        </select>
+        <div class="form-text">Chọn AC/DC nếu biết loại.</div>
+    </div>
+
+
+    <div class="col-md-3">
+        <label asp-for="MaxPowerKw" class="form-label"></label>
+        <div class="input-group">
+            <input asp-for="MaxPowerKw" type="number" step="0.1" inputmode="decimal" class="form-control" aria-describedby="powerHelp" />
+            <span class="input-group-text">kW</span>
+        </div>
+        <div id="powerHelp" class="form-text">Công suất tối đa (ví dụ: 7.4, 22, 60, 120)</div>
+        <span asp-validation-for="MaxPowerKw" class="text-danger"></span>
+    </div>
+
+
+    <div class="col-md-4">
+        <label asp-for="Status" class="form-label"></label>
+        <select asp-for="Status" asp-items="Html.GetEnumSelectList<EVCS.Models.Enums.ChargerStatus>()" class="form-select"></select>
+        <div class="form-text">Trạng thái hoạt động.</div>
+        <span asp-validation-for="Status" class="text-danger"></span>
+    </div>
+</div>

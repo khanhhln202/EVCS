@@ -1,0 +1,55 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using EVCS.Models.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<nav class="navbar navbar-expand-lg border-bottom bg-body sticky-top" aria-label="Main navigation">
+    <div class="container-xxl">
+        <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
+            <i class="bi bi-ev-station text-primary"></i><span class="fw-semibold">EVCS</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topnav"
+                aria-controls="topnav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="topnav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Stations" asp-action="Map"><i class="bi bi-map"></i> Bản đồ trạm</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-gear"></i> Quản trị
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Stations" asp-action="Index">Trạm sạc</a></li>
+                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="BookingPolicy" asp-action="Index">Chính sách đặt chỗ</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-2">
+                <div class="btn-group" role="group" aria-label="Dark mode">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-theme-value="auto" aria-label="Auto theme"><i class="bi bi-circle-half"></i></button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-theme-value="light" aria-label="Light theme"><i class="bi bi-brightness-high"></i></button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-theme-value="dark" aria-label="Dark theme"><i class="bi bi-moon"></i></button>
+                </div>
+
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <span class="text-body-secondary small me-1"><i class="bi bi-person-circle"></i> @User.Identity?.Name</span>
+                    <form class="d-inline" method="post"
+                          asp-area="Identity" asp-page="/Account/Logout"
+                          asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                        <button class="btn btn-outline-secondary btn-sm">Đăng xuất</button>
+                    </form>
+                }
+                else
+                {
+                    <a class="btn btn-primary btn-sm" asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a>
+                }
+            </div>
+        </div>
+    </div>
+</nav>

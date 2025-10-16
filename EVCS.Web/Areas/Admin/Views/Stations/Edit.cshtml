@@ -1,0 +1,19 @@
+﻿@model EVCS.Services.DTOs.StationUpsertDto
+@{
+    ViewData["Title"] = "Sửa trạm";
+}
+<div class="card">
+    <div class="card-body">
+        <form asp-action="Edit" method="post" class="vstack gap-3" novalidate>
+            <input type="hidden" asp-for="Id" />
+            <partial name="_Form" />
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary"><i class="bi bi-check2"></i> Cập nhật</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

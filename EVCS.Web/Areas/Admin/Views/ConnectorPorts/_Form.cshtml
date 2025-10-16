@@ -1,0 +1,40 @@
+﻿@model EVCS.Services.DTOs.ConnectorPortUpsertDto
+<div class="row g-3">
+    <input type="hidden" asp-for="ChargerId" />
+    <input type="hidden" asp-for="RowVersion" />
+
+
+    <div class="col-md-2">
+        <label asp-for="IndexNo" class="form-label"></label>
+        <div class="input-group">
+            <span class="input-group-text" aria-hidden="true">#</span>
+            <input asp-for="IndexNo" type="number" min="1" class="form-control" aria-describedby="idxHelp" />
+        </div>
+        <div id="idxHelp" class="form-text">Thứ tự cổng trên bộ sạc</div>
+        <span asp-validation-for="IndexNo" class="text-danger"></span>
+    </div>
+
+
+    <div class="col-md-3">
+        <label asp-for="ConnectorType" class="form-label"></label>
+        <select asp-for="ConnectorType" class="form-select" aria-label="Loại đầu nối">
+            <option value="">(Chọn loại)</option>
+            <option>Type2</option>
+            <option>CCS2</option>
+            <option>CHAdeMO</option>
+            <option>GB/T</option>
+        </select>
+        <div class="form-text">Loại đầu nối tương thích.</div>
+    </div>
+
+
+    <div class="col-md-3">
+        <label asp-for="MaxPowerKw" class="form-label"></label>
+        <div class="input-group">
+            <input asp-for="MaxPowerKw" type="number" step="0.1" inputmode="decimal" class="form-control" aria-describedby="pwrHelp" />
+            <span class="input-group-text">kW</span>
+        </div>
+        <div id="pwrHelp" class="form-text">Công suất tối đa của cổng.</div>
+        <span asp-validation-for="MaxPowerKw" class="text-danger"></span>
+    </div>
+</div>
