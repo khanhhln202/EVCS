@@ -1,0 +1,105 @@
+﻿/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;700&display=swap');
+
+/* Biến màu chủ đạo */
+:root {
+    --primary-color: #0052cc; /* Xanh dương đậm */
+    --secondary-color: #007bff; /* Xanh dương sáng hơn */
+    --light-gray: #f8f9fa;
+    --dark-text: #333;
+}
+
+body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    color: var(--dark-text);
+}
+
+/* Hero Section Styling */
+/* Hero Section Styling */
+.hero-section {
+    /* 1. Đặt ảnh nền và thêm một lớp phủ màu tối để chữ dễ đọc */
+    background: linear-gradient(rgba(0, 40, 85, 0.6), rgba(0, 20, 50, 0.6)), url('../img/banner.jpg');
+    /* 2. Đảm bảo ảnh nền luôn vừa vặn và căn giữa */
+    background-size: cover;
+    background-position: center center;
+    /* Các thuộc tính cũ để giữ bố cục */
+    padding: 120px 0;
+    margin-bottom: -1px;
+    animation: fadeIn 1.5s ease-in-out;
+}
+
+    .hero-section h1 {
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-section .btn-primary {
+        background-color: #ffffff;
+        color: var(--primary-color);
+        border: 2px solid #ffffff;
+        padding: 12px 30px;
+        transition: all 0.3s ease;
+    }
+
+        .hero-section .btn-primary:hover {
+            background-color: transparent;
+            color: #ffffff;
+        }
+
+
+/* Section Styling */
+section {
+    padding: 80px 0;
+}
+
+h2 {
+    color: var(--primary-color);
+}
+
+.bg-light {
+    background-color: var(--light-gray) !important;
+}
+
+
+/* Features Section Styling */
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.feature-card {
+    border-radius: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 80px 0;
+    }
+
+    section {
+        padding: 60px 0;
+    }
+}
