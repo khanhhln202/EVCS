@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using EVCS.Models.Identity
+@using EVCS.Utility
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
@@ -16,17 +17,28 @@
         <div class="collapse navbar-collapse" id="topnav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link" asp-controller="Stations" asp-action="Map"><i class="bi bi-map"></i> Bản đồ trạm</a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-gear"></i> Quản trị
+                    <a class="nav-link" asp-area="" asp-controller="Stations" asp-action="Map">
+                        <i class="bi bi-map"></i> Bản đồ trạm
                     </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Stations" asp-action="Index">Trạm sạc</a></li>
-                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="BookingPolicy" asp-action="Index">Chính sách đặt chỗ</a></li>
-                    </ul>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-area="" asp-page="/Stations/List">
+                        <i class="bi bi-list-ul"></i> Danh sách trạm
+                    </a>
+                </li>
+
+                @if (SignInManager.IsSignedIn(User) && User.IsInRole(SD.RoleAdmin))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-gear"></i> Quản trị
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" asp-area="Admin" asp-controller="Stations" asp-action="Index">Trạm sạc</a></li>
+                            <li><a class="dropdown-item" asp-area="Admin" asp-controller="BookingPolicy" asp-action="Index">Chính sách đặt chỗ</a></li>
+                        </ul>
+                    </li>
+                }
             </ul>
 
             <div class="d-flex align-items-center gap-2">

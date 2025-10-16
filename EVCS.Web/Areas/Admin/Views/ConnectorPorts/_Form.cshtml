@@ -37,4 +37,23 @@
         <div id="pwrHelp" class="form-text">Công suất tối đa của cổng.</div>
         <span asp-validation-for="MaxPowerKw" class="text-danger"></span>
     </div>
+
+
+    <div class="col-md-3">
+        <label asp-for="DefaultPricePerKwh" class="form-label"></label>
+        <div class="input-group">
+            <input asp-for="DefaultPricePerKwh" type="number" step="100" min="0" inputmode="numeric" class="form-control" aria-describedby="priceHelp" />
+            <span class="input-group-text">₫/kWh</span>
+        </div>
+        <div id="priceHelp" class="form-text">Giá mặc định cho mỗi kWh.</div>
+        <span asp-validation-for="DefaultPricePerKwh" class="text-danger"></span>
+    </div>
+
+
+    <div class="col-md-4">
+        <label asp-for="Status" class="form-label"></label>
+        <select asp-for="Status" asp-items="Html.GetEnumSelectList<EVCS.Models.Enums.ConnectorPortStatus>()" class="form-select"></select>
+        <div class="form-text">Trạng thái hoạt động của cổng.</div>
+        <span asp-validation-for="Status" class="text-danger"></span>
+    </div>
 </div>
