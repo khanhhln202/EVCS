@@ -2,7 +2,94 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+@{
+    ViewData["Title"] = "Trang Chủ";
+}
+
+<header class="hero-section text-white text-center">
+    <div class="container">
+        <h1 class="display-3 fw-bold">Hệ Thống Quản Lý Trạm Sạc Xe Điện</h1>
+        <p class="lead my-4">
+            Giải pháp thông minh và toàn diện để quản lý, vận hành và kết nối mạng lưới trạm sạc của bạn.
+        </p>
+        <a href="#about" class="btn btn-primary btn-lg fw-bold">Tìm Hiểu Ngay</a>
+    </div>
+</header>
+
+<section id="about" class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="fw-bold mb-3">Về Dự Án Của Chúng Tôi</h2>
+                <p class="text-muted">
+                    Dự án được xây dựng nhằm mục tiêu đơn giản hóa việc quản lý các trạm sạc xe điện, mang lại trải nghiệm liền mạch cho cả người vận hành (Admin, Staff) và người sử dụng (EV Driver). Chúng tôi cung cấp một nền tảng tập trung, dễ sử dụng và có khả năng mở rộng.
+                </p>
+                <p class="text-muted">
+                    Từ việc theo dõi trạng thái trạm sạc theo thời gian thực, quản lý lịch đặt chỗ, đến xử lý thanh toán và phân tích dữ liệu, hệ thống của chúng tôi đáp ứng mọi nhu cầu của một mạng lưới sạc hiện đại.
+                </p>
+            </div>
+            <div class="col-lg-6 text-center">
+                <img src="img/middle1.jpg" class="img-fluid rounded shadow" alt="EV Charging Station">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Tính Năng Nổi Bật</h2>
+            <p class="text-muted">Khám phá những gì hệ thống của chúng tôi có thể làm.</p>
+        </div>
+        <div class="row text-center">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm border-0 feature-card">
+                    <div class="card-body">
+                        <div class="feature-icon bg-primary text-white mb-3">
+                            <i class="fas fa-bolt fa-2x"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Quản Lý Trạm Sạc</h4>
+                        <p class="card-text text-muted">Theo dõi trạng thái, hiệu suất và lịch sử hoạt động của từng trạm sạc theo thời gian thực.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm border-0 feature-card">
+                    <div class="card-body">
+                        <div class="feature-icon bg-primary text-white mb-3">
+                            <i class="fas fa-calendar-alt fa-2x"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Đặt Lịch & Thanh Toán</h4>
+                        <p class="card-text text-muted">Người dùng có thể dễ dàng tìm kiếm trạm, đặt lịch sạc và thanh toán trực tuyến an toàn.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm border-0 feature-card">
+                    <div class="card-body">
+                        <div class="feature-icon bg-primary text-white mb-3">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Báo Cáo & Phân Tích</h4>
+                        <p class="card-text text-muted">Cung cấp các báo cáo chi tiết về doanh thu, tần suất sử dụng và các chỉ số quan trọng khác.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="tech" class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Công Nghệ Sử Dụng</h2>
+            <p class="text-muted">Chúng tôi xây dựng dự án trên một nền tảng vững chắc và hiện đại.</p>
+            <div class="d-flex justify-content-center align-items-center gap-4 mt-4">
+                <span class="badge bg-primary fs-6 p-2">ASP.NET Core</span>
+                <span class="badge bg-secondary fs-6 p-2">SQL Server</span>
+                <span class="badge bg-success fs-6 p-2">Entity Framework Core</span>
+                <span class="badge bg-info text-dark fs-6 p-2">Azure Deployment</span>
+            </div>
+        </div>
+    </div>
+</section>
