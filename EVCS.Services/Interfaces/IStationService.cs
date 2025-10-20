@@ -10,5 +10,6 @@ namespace EVCS.Services.Interfaces
     public interface IStationService
     {
         Task<IReadOnlyList<StationListItemDto>> GetOnlineStationsAsync(string? city = null);
+
     }
 }

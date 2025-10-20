@@ -1,0 +1,31 @@
+﻿@page "/Payments/Checkout/{id:guid}"
+@model EVCS.Web.Pages.Payments.CheckoutModel
+@{
+    ViewData["Title"] = "Thanh toán đặt chỗ";
+}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title mb-3">Thanh toán tiền cọc</h5>
+    @if (Model.Error != null)
+    {
+        <div class="alert alert-danger">@Model.Error</div>
+    }
+    else
+    {
+      <dl class="row small">
+        <dt class="col-sm-3">Mã đặt chỗ</dt><dd class="col-sm-9">@Model.BookingCode</dd>
+        <dt class="col-sm-3">Trạm</dt><dd class="col-sm-9">@Model.StationName</dd>
+        <dt class="col-sm-3">Trụ</dt><dd class="col-sm-9">[@Model.ChargerType - @Model.PowerKw] • Cổng #@Model.PortIndex</dd>
+        <dt class="col-sm-3">Giữ chỗ</dt><dd class="col-sm-9">@Model.HoldWindowText</dd>
+        <dt class="col-sm-3">Số tiền</dt><dd class="col-sm-9"><strong>@Model.AmountText</strong></dd>
+      </dl>
+      <form method="post">
+        <input type="hidden" asp-for="PaymentId" />
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary" type="submit"><i class="bi bi-credit-card"></i> Thanh toán</button>
+          <a class="btn btn-outline-secondary" asp-controller="Stations" asp-action="List">Hủy</a>
+        </div>
+      </form>
+    }
+  </div>
+</div>

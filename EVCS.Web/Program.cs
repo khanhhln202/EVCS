@@ -57,6 +57,34 @@ builder.Services.AddScoped<IConnectorPortAdminService, ConnectorPortAdminService
 builder.Services.AddScoped<IBookingPolicyService, BookingPolicyService>();
 builder.Services.AddScoped<IStationQueryService, StationQueryService>();
 
+// Add services
+builder.Services.AddScoped<EVCS.Services.Interfaces.IBookingService, EVCS.Services.Implementations.BookingService>();
+
+// Make cookie auth return 401/403 for API paths
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Events.OnRedirectToLogin = ctx =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/api"))
+        {
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        }
+        ctx.Response.Redirect(ctx.RedirectUri);
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = ctx =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/api"))
+        {
+            ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        }
+        ctx.Response.Redirect(ctx.RedirectUri);
+        return Task.CompletedTask;
+    };
+});
+
 var app = builder.Build();
 
 // Seed DB (roles, admin, migrations)
