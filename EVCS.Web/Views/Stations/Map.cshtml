@@ -5,20 +5,15 @@
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
 
 <style>
-/* Nút quay về vị trí hiện tại */
-.leaflet-bar .locate-btn {
-    display: block; width: 32px; height: 32px; line-height: 32px;
-    text-align: center;
-}
-.leaflet-bar .locate-btn i { font-size: 1rem; }
+.leaflet-bar .locate-btn { display:block;width:32px;height:32px;line-height:32px;text-align:center; }
+.leaflet-bar .locate-btn i { font-size:1rem; }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-2">
     <h4 class="mb-0">@ViewData["Title"]</h4>
     <div class="d-flex gap-2 align-items-center">
         <div id="result-count" class="small text-body-secondary"></div>
-        <button class="btn btn-outline-secondary"
-                type="button" data-bs-toggle="offcanvas" data-bs-target="#filterCanvas">
+        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterCanvas">
             <i class="bi bi-sliders"></i> Bộ lọc
         </button>
     </div>
@@ -26,11 +21,8 @@
 
 <div id="map" style="height:70vh;border-radius:.75rem;"></div>
 
-<!-- Offcanvas overlay (desktop) -->
-<div class="offcanvas offcanvas-end border-0 shadow-sm"
-     id="filterCanvas" tabindex="-1" aria-labelledby="filterLabel"
-     data-bs-backdrop="true" data-bs-scroll="true"
-     style="--bs-offcanvas-width:420px">
+<div class="offcanvas offcanvas-end border-0 shadow-sm" id="filterCanvas" tabindex="-1" aria-labelledby="filterLabel"
+     data-bs-backdrop="true" data-bs-scroll="true" style="--bs-offcanvas-width:420px">
     <div class="offcanvas-header">
         <h5 id="filterLabel" class="mb-0"><i class="bi bi-funnel"></i> Bộ lọc</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -42,17 +34,37 @@
                 <input id="f-city" class="form-control" placeholder="TP.HCM, Hà Nội" />
             </div>
             <div>
-                <label class="form-label">Đầu nối</label>
-                <select id="f-connector" class="form-select">
-                    <option value="">Bất kỳ</option>
-                    <option>Type2</option>
-                    <option>CCS2</option>
-                    <option>CHAdeMO</option>
+                <label class="form-label">Loại trụ sạc</label>
+                <select id="f-chargerType" class="form-select">
+                    <option value="">Tất cả</option>
+                    <option value="AC">AC</option>
+                    <option value="DC">DC</option>
+                    <option value="GB/T">GB/T</option>
                 </select>
             </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="f-opennow" />
-                <label class="form-check-label" for="f-opennow">Đang mở cửa</label>
+            <div class="row g-2">
+                <div class="col-6">
+                    <label class="form-label">Công suất từ</label>
+                    <div class="input-group">
+                        <input id="f-minKw" type="number" step="0.1" min="0" class="form-control" placeholder="3.5" />
+                        <span class="input-group-text">kW</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label">Đến</label>
+                    <div class="input-group">
+                        <input id="f-maxKw" type="number" step="0.1" min="0" class="form-control" placeholder="180" />
+                        <span class="input-group-text">kW</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label class="form-label">Trạng thái trạm</label>
+                <select id="f-status" class="form-select">
+                    <option value="all">Tất cả</option>
+                    <option value="online">Online</option>
+                    <option value="offline">Offline</option>
+                </select>
             </div>
             <button class="btn btn-primary w-100" id="btn-search">
                 <i class="bi bi-search"></i> Áp dụng
@@ -64,171 +76,92 @@
 @section Scripts {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const defaultCenter = [10.8231, 106.6297]; // fallback nếu không có quyền định vị
+  const defaultCenter = [10.8231, 106.6297];
   const map = L.map('map').setView(defaultCenter, 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
 
-  // Lớp vẽ lộ trình
   const routeLayer = L.layerGroup().addTo(map);
 
-  // Utils
   const numberVND = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
-  const formatDistance = (m) => {
-    if (!Number.isFinite(m)) return '—';
-    if (m < 1000) return `${Math.round(m)} m`;
-    return `${(m / 1000).toFixed(m >= 10000 ? 0 : 1)} km`;
-  };
+  const formatDistance = (m) => !Number.isFinite(m) ? '—' : (m < 1000 ? `${Math.round(m)} m` : `${(m/1000).toFixed(m >= 10000 ? 0 : 1)} km`);
   const formatDuration = (s) => {
     if (!Number.isFinite(s)) return '—';
-    const m = Math.round(s / 60);
-    if (m < 60) return `${m} phút`;
-    const h = Math.floor(m / 60);
-    const rm = m % 60;
-    return rm ? `${h} giờ ${rm} phút` : `${h} giờ`;
+    const m = Math.round(s/60); if (m < 60) return `${m} phút`;
+    const h = Math.floor(m/60), rm = m%60; return rm ? `${h} giờ ${rm} phút` : `${h} giờ`;
   };
-  const toRad = (deg) => deg * Math.PI / 180;
+  const formatKw = (kw) => {
+    if (!Number.isFinite(kw)) return '—';
+    const v = Number(kw), hasDecimal = Math.abs(v % 1) > 1e-6;
+    return `${hasDecimal ? v.toFixed(1) : v.toFixed(0)}kW`;
+  };
+
+  const toRad = (deg) => deg*Math.PI/180;
   const haversine = (from, to) => {
     if (!from || !to) return NaN;
-    const R = 6371000;
-    const [lat1, lon1] = from, [lat2, lon2] = to;
-    const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
-    return 2 * R * Math.asin(Math.sqrt(a));
+    const R=6371000,[lat1,lon1]=from,[lat2,lon2]=to,dLat=toRad(lat2-lat1),dLon=toRad(lon2-lon1);
+    const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+    return 2*R*Math.asin(Math.sqrt(a));
   };
 
   const invalidate = () => setTimeout(() => map.invalidateSize(), 200);
   window.addEventListener('resize', invalidate);
-
   const canvasEl = document.getElementById('filterCanvas');
   if (canvasEl) {
     canvasEl.addEventListener('shown.bs.offcanvas', invalidate);
     canvasEl.addEventListener('hidden.bs.offcanvas', invalidate);
   }
 
-  // Trạng thái vị trí người dùng
-  let userLatLng = null;       // [lat, lng]
-  let userMarker = null;       // Marker
-  let accCircle = null;        // Vòng tròn độ chính xác
-  let geoWatchId = null;
+  let userLatLng = null, userMarker = null, accCircle = null, geoWatchId = null;
 
   const setUserLocation = (lat, lng, accuracy) => {
     userLatLng = [lat, lng];
-
-    if (!userMarker) {
-      userMarker = L.marker(userLatLng, { title: 'Vị trí của bạn' }).addTo(map);
-    } else {
-      userMarker.setLatLng(userLatLng);
-    }
-
+    if (!userMarker) userMarker = L.marker(userLatLng, { title: 'Vị trí của bạn' }).addTo(map);
+    else userMarker.setLatLng(userLatLng);
     if (accuracy && Number.isFinite(accuracy)) {
-      if (!accCircle) {
-        accCircle = L.circle(userLatLng, { radius: accuracy, color: '#0d6efd', fillOpacity: 0.1 }).addTo(map);
-      } else {
-        accCircle.setLatLng(userLatLng).setRadius(accuracy);
-      }
+      if (!accCircle) accCircle = L.circle(userLatLng, { radius: accuracy, color: '#0d6efd', fillOpacity: 0.1 }).addTo(map);
+      else accCircle.setLatLng(userLatLng).setRadius(accuracy);
     }
   };
 
-  const stopGeoWatch = () => {
-    if (geoWatchId != null) {
-      navigator.geolocation.clearWatch(geoWatchId);
-      geoWatchId = null;
-    }
-  };
-
+  const stopGeoWatch = () => { if (geoWatchId != null) { navigator.geolocation.clearWatch(geoWatchId); geoWatchId = null; } };
   const locateUser = (recenterOnce = false) => {
-    if (!navigator.geolocation) {
-      console.warn('Trình duyệt không hỗ trợ Geolocation');
-      return;
-    }
-
-    let bestAcc = Number.POSITIVE_INFINITY;
-    let didRecenter = false;
-
+    if (!navigator.geolocation) { console.warn('Trình duyệt không hỗ trợ Geolocation'); return; }
+    let bestAcc = Number.POSITIVE_INFINITY, didRecenter = false;
     const handlePos = (pos) => {
       const { latitude, longitude, accuracy } = pos.coords;
-      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
-          Math.abs(latitude) > 90 || Math.abs(longitude) > 180 ||
-          (latitude === 0 && longitude === 0)) return;
-
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180 || (latitude === 0 && longitude === 0)) return;
       if (accuracy + 5 < bestAcc) {
-        bestAcc = accuracy;
-        setUserLocation(latitude, longitude, accuracy);
-
-        if (recenterOnce && !didRecenter) {
-          map.setView([latitude, longitude], Math.max(map.getZoom(), 15), { animate: true });
-          didRecenter = true;
-        }
+        bestAcc = accuracy; setUserLocation(latitude, longitude, accuracy);
+        if (recenterOnce && !didRecenter) { map.setView([latitude, longitude], Math.max(map.getZoom(), 15), { animate: true }); didRecenter = true; }
       }
-
       if (bestAcc <= 40) stopGeoWatch();
     };
-
-    const handleErr = (err) => {
-      console.warn('Không thể lấy vị trí người dùng:', err.message);
-    };
-
-    navigator.geolocation.getCurrentPosition(handlePos, handleErr, {
-      enableHighAccuracy: true, maximumAge: 0, timeout: 10000
-    });
-
-    geoWatchId = navigator.geolocation.watchPosition(handlePos, handleErr, {
-      enableHighAccuracy: true, maximumAge: 0
-    });
-
+    const handleErr = (err) => console.warn('Không thể lấy vị trí người dùng:', err.message);
+    navigator.geolocation.getCurrentPosition(handlePos, handleErr, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
+    geoWatchId = navigator.geolocation.watchPosition(handlePos, handleErr, { enableHighAccuracy: true, maximumAge: 0 });
     setTimeout(stopGeoWatch, 15000);
   };
 
-  // Nút quay về vị trí hiện tại
   const locateControl = L.control({ position: 'topleft' });
-  locateControl.onAdd = function () {
-    const div = L.DomUtil.create('div', 'leaflet-bar');
-    const a = L.DomUtil.create('a', 'locate-btn', div);
-    a.href = '#';
-    a.title = 'Về vị trí của tôi';
-    a.innerHTML = "<i class='bi bi-geo-alt'></i>";
-    L.DomEvent.on(a, 'click', (e) => { L.DomEvent.stop(e); locateUser(true); });
-    return div;
-  };
+  locateControl.onAdd = function () { const div = L.DomUtil.create('div', 'leaflet-bar'); const a = L.DomUtil.create('a', 'locate-btn', div); a.href='#'; a.title='Về vị trí của tôi'; a.innerHTML="<i class='bi bi-geo-alt'></i>"; L.DomEvent.on(a,'click',(e)=>{L.DomEvent.stop(e);locateUser(true);}); return div; };
   locateControl.addTo(map);
 
-  // Nút xoá lộ trình
   const clearRoute = () => routeLayer.clearLayers();
   const clearRouteControl = L.control({ position: 'topleft' });
-  clearRouteControl.onAdd = function () {
-    const div = L.DomUtil.create('div', 'leaflet-bar');
-    const a = L.DomUtil.create('a', 'locate-btn', div);
-    a.href = '#';
-    a.title = 'Xoá lộ trình';
-    a.innerHTML = "<i class='bi bi-x-lg'></i>";
-    L.DomEvent.on(a, 'click', (e) => { L.DomEvent.stop(e); clearRoute(); });
-    return div;
-  };
+  clearRouteControl.onAdd = function () { const div = L.DomUtil.create('div','leaflet-bar'); const a = L.DomUtil.create('a','locate-btn',div); a.href='#'; a.title='Xoá lộ trình'; a.innerHTML="<i class='bi bi-x-lg'></i>"; L.DomEvent.on(a,'click',(e)=>{L.DomEvent.stop(e);clearRoute();}); return div; };
   clearRouteControl.addTo(map);
 
-  // Routing (OSRM)
   async function drawRoute(fromLatLng, toLatLng, infoEl) {
     try {
       clearRoute();
-      const [fromLat, fromLng] = fromLatLng;
-      const [toLat, toLng] = toLatLng;
-      // OSRM expects lon,lat
+      const [fromLat, fromLng] = fromLatLng, [toLat, toLng] = toLatLng;
       const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('OSRM request failed');
-      const data = await res.json();
-      if (!data.routes?.length) throw new Error('No route found');
+      const res = await fetch(url); if (!res.ok) throw new Error('OSRM request failed');
+      const data = await res.json(); if (!data.routes?.length) throw new Error('No route found');
       const route = data.routes[0];
-
-      // Draw route
       const geo = L.geoJSON(route.geometry, { style: { color: '#0d6efd', weight: 4 } }).addTo(routeLayer);
-      // Fit to route bounds
       try { map.fitBounds(geo.getBounds(), { padding: [24, 24] }); } catch {}
-
-      // Update info
-      const dist = formatDistance(route.distance);
-      const dur = formatDuration(route.duration);
+      const dist = formatDistance(route.distance), dur = formatDuration(route.duration);
       if (infoEl) infoEl.textContent = `Quãng đường (ô tô): ${dist} • Ước tính: ${dur}`;
     } catch (e) {
       console.warn('Routing error', e);
@@ -239,30 +172,28 @@ document.addEventListener('DOMContentLoaded', () => {
   let markers = [];
   const clearMarkers = () => { markers.forEach(m => map.removeLayer(m)); markers = []; };
 
-  const isValidCoord = (lat, lng) =>
-    Number.isFinite(lat) && Number.isFinite(lng) &&
-    Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
-
-  // In case user saved lat/lng swapped, try to normalize
+  const isValidCoord = (lat,lng) => Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
   const normalizeLatLng = (rawLat, rawLng) => {
     let lat = Number(rawLat), lng = Number(rawLng);
     if (isValidCoord(lat, lng)) return { lat, lng };
-    if (isValidCoord(Number(rawLng), Number(rawLat))) {
-      console.warn('Swapped lat/lng detected, auto-correcting.', { rawLat, rawLng });
-      return { lat: Number(rawLng), lng: Number(rawLat) };
-    }
+    if (isValidCoord(Number(rawLng), Number(rawLat))) { console.warn('Swapped lat/lng detected, auto-correcting.', { rawLat, rawLng }); return { lat: Number(rawLng), lng: Number(rawLat) }; }
     return { lat: NaN, lng: NaN };
   };
 
   async function loadData() {
     const city = document.getElementById('f-city').value.trim();
-    const connectorType = document.getElementById('f-connector').value;
-    const openNow = document.getElementById('f-opennow').checked;
+    const chargerType = document.getElementById('f-chargerType').value;
+    const minKw = parseFloat(document.getElementById('f-minKw').value);
+    const maxKw = parseFloat(document.getElementById('f-maxKw').value);
+    const status = document.getElementById('f-status').value;
 
     const url = new URL('/Stations/MapData', window.location.origin);
     if (city) url.searchParams.set('city', city);
-    if (connectorType) url.searchParams.set('connectorType', connectorType);
-    if (openNow) url.searchParams.set('openNow', 'true');
+    if (chargerType) url.searchParams.set('chargerType', chargerType);
+    if (!Number.isNaN(minKw)) url.searchParams.set('minPowerKw', String(minKw));
+    if (!Number.isNaN(maxKw)) url.searchParams.set('maxPowerKw', String(maxKw));
+    if (status === 'online') url.searchParams.set('online', 'true');
+    else if (status === 'offline') url.searchParams.set('online', 'false');
 
     let data = [];
     try {
@@ -281,35 +212,48 @@ document.addEventListener('DOMContentLoaded', () => {
       const approxDist = userLatLng ? haversine(userLatLng, [lat, lng]) : NaN;
       const approxLine = userLatLng ? `<div class='text-body-secondary'>Cách bạn (đường chim bay): ${formatDistance(approxDist)}</div>` : '';
 
-      const portsHtml = (s.ports || [])
-        .map(p => `${p.connectorType ?? 'N/A'}: ${numberVND.format(p.pricePerKwh ?? 0)}`)
-        .join('<br/>');
+      let detailsHtml = '';
+      if (Array.isArray(s.chargers) && s.chargers.length) {
+        detailsHtml = s.chargers.map(c => {
+          const type = c.type || '—';
+          const pwr = formatKw(c.maxPowerKw);
+          const price = Number.isFinite(c.pricePerKwh) ? `${numberVND.format(c.pricePerKwh)}/kWh` : '—';
+          const avail = Number.isFinite(c.available) ? c.available : 0;
+          const total = Number.isFinite(c.total) ? c.total : 0;
+          return `[${type} - ${pwr}] | slot trống ${avail}/${total} cổng | ${price}.`;
+        }).join('<br/>');
+      } else {
+        detailsHtml = (s.ports || []).map(p => {
+          const typ = p.connectorType ?? 'N/A';
+          const price = `${numberVND.format(p.pricePerKwh ?? 0)}/kWh`;
+          return `[${typ}] | ${p.status ?? '—'} | ${price}.`;
+        }).join('<br/>') || 'Chưa có dữ liệu cổng';
+      }
 
       const gmapUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
       const routeInfoId = `route-info-${idx}`;
+      const hoursText = s.hours ? ` | Thời gian hoạt động ${s.hours}` : '';
 
       const html = `<div class='small'>
                       <div class='d-flex justify-content-between align-items-center'>
                         <strong>${s.name}</strong>
                         <div class='btn-group'>
-                          <a class='btn btn-outline-primary btn-sm' href='${gmapUrl}' target='_blank' rel='noopener'
-                             title='Mở Google Maps'>
+                          <a class='btn btn-outline-primary btn-sm' href='${gmapUrl}' target='_blank' rel='noopener' title='Mở Google Maps'>
                             <i class='bi bi-sign-turn-right-fill'></i>
                           </a>
-                          <button type='button' class='btn btn-primary btn-sm btn-route'
-                                  data-lat='${lat}' data-lng='${lng}' data-target='${routeInfoId}'
-                                  title='Vẽ lộ trình trên bản đồ'>
+                          <button type='button' class='btn btn-primary btn-sm btn-route' data-lat='${lat}' data-lng='${lng}' data-target='${routeInfoId}' title='Vẽ lộ trình trên bản đồ'>
                             <i class='bi bi-signpost'></i>
                           </button>
                         </div>
                       </div>
-                      <span class='text-body-secondary'>${s.city ?? ''}</span>
+                      <span class='text-body-secondary'>${s.city ?? ''}${hoursText}</span>
                       ${approxLine}
                       <div id='${routeInfoId}' class='mt-1 fw-semibold'></div>
-                      <hr class='my-1'/>${portsHtml || 'Chưa có cổng'}
+                      <hr class='my-1'/>
+                      ${detailsHtml}
                     </div>`;
 
-      const marker = L.marker([lat, lng], { title: s.name }).bindPopup(html, { minWidth: 260 });
+      const marker = L.marker([lat, lng], { title: s.name }).bindPopup(html, { minWidth: 300 });
       marker.addTo(map);
       markers.push(marker);
       bounds.push([lat, lng]);
@@ -318,39 +262,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('result-count').innerText = `${visible} trạm phù hợp`;
 
-    if (userLatLng) bounds.push(userLatLng); // Gộp cả vị trí người dùng khi fit
-    if (bounds.length) {
-      try { map.fitBounds(bounds, { padding: [24, 24] }); }
-      catch (e) { console.warn('fitBounds failed', e); }
-    }
+    if (userLatLng) bounds.push(userLatLng);
+    if (bounds.length) { try { map.fitBounds(bounds, { padding: [24, 24] }); } catch (e) { console.warn('fitBounds failed', e); } }
   }
 
-  // Handle route button inside popups
   map.on('popupopen', (e) => {
-    const root = e.popup.getElement();
-    if (!root) return;
-    const btn = root.querySelector('.btn-route');
-    if (!btn) return;
-
+    const root = e.popup.getElement(); if (!root) return;
+    const btn = root.querySelector('.btn-route'); if (!btn) return;
     btn.addEventListener('click', async () => {
       if (!userLatLng) { alert('Chưa có vị trí của bạn. Vui lòng bật định vị.'); return; }
-      const lat = Number(btn.dataset.lat), lng = Number(btn.dataset.lng);
-      const targetId = btn.dataset.target;
-      const infoEl = root.querySelector(`#${CSS.escape(targetId)}`);
-      if (infoEl) infoEl.textContent = 'Đang tính lộ trình...';
+      const lat = Number(btn.dataset.lat), lng = Number(btn.dataset.lng), targetId = btn.dataset.target;
+      const infoEl = root.querySelector(`#${CSS.escape(targetId)}`); if (infoEl) infoEl.textContent = 'Đang tính lộ trình...';
       await drawRoute(userLatLng, [lat, lng], infoEl);
     }, { once: true });
   });
 
   document.getElementById('btn-search').addEventListener('click', async () => {
     await loadData();
-    const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(canvasEl);
+    const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('filterCanvas'));
     bsOffcanvas.hide();
   });
 
-  // 1) Định vị với fix mới (không dùng cache) và tinh chỉnh độ chính xác
   locateUser(true);
-  // 2) Sau đó tải dữ liệu trạm
   loadData();
 });
 </script>

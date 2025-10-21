@@ -7,11 +7,13 @@ using EVCS.Services.Admin;
 using EVCS.Services.Implementations;
 using EVCS.Services.Interfaces;
 using EVCS.Services.Query;
+using EVCS.Services.Stripe;
 using EVCS.Utility;
 using EVCS.Utility.Options;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +23,13 @@ builder.Host.UseSerilog();
 
 // DbContext + 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlServerOptions =>
+    {
+        sqlServerOptions.UseCompatibilityLevel(120);
+    }));
+// Stripe Setting
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
+StripeConfiguration.ApiKey = builder.Configuration.GetValue<string>("Stripe:SecretKey");
 // Identity (GUID keys)
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(opt =>
 {
@@ -56,6 +63,35 @@ builder.Services.AddScoped<IChargerAdminService, ChargerAdminService>();
 builder.Services.AddScoped<IConnectorPortAdminService, ConnectorPortAdminService>();
 builder.Services.AddScoped<IBookingPolicyService, BookingPolicyService>();
 builder.Services.AddScoped<IStationQueryService, StationQueryService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
+// Add services
+builder.Services.AddScoped<EVCS.Services.Interfaces.IBookingService, EVCS.Services.Implementations.BookingService>();
+
+// Make cookie auth return 401/403 for API paths
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Events.OnRedirectToLogin = ctx =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/api"))
+        {
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        }
+        ctx.Response.Redirect(ctx.RedirectUri);
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = ctx =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/api"))
+        {
+            ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        }
+        ctx.Response.Redirect(ctx.RedirectUri);
+        return Task.CompletedTask;
+    };
+});
 
 var app = builder.Build();
 

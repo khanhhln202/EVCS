@@ -22,7 +22,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-area="" asp-page="/Stations/List">
+                    <a class="nav-link" asp-area="" asp-controller="Stations" asp-action="List">
                         <i class="bi bi-list-ul"></i> Danh sách trạm
                     </a>
                 </li>
@@ -50,7 +50,9 @@
 
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    <span class="text-body-secondary small me-1"><i class="bi bi-person-circle"></i> @User.Identity?.Name</span>
+                    <a class="btn btn-outline-secondary btn-sm" asp-page="/Account/Profile">
+                        <i class="bi bi-person-circle"></i> @User.Identity?.Name
+                    </a>
                     <form class="d-inline" method="post"
                           asp-area="Identity" asp-page="/Account/Logout"
                           asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
