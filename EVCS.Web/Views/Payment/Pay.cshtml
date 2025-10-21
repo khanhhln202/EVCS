@@ -1,0 +1,84 @@
+﻿@model EVCS.Services.DTOs.PaymentViewModel
+@{
+    ViewData["Title"] = "Thanh toán đặt chỗ";
+}
+
+<h2 class="mb-4">Thanh toán đặt chỗ</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="row">
+    <!-- Thông tin đặt chỗ -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm p-4">
+            <h5 class="mb-3">Thông tin đặt chỗ</h5>
+            <table class="table table-borderless">
+                <tr><th>Mã đặt chỗ:</th><td>@Model.BookingCode</td></tr>
+                <tr><th>Trạm sạc:</th><td>@Model.StationName</td></tr>
+                <tr><th>Cổng sạc:</th><td>@Model.PortName</td></tr>
+                <tr><th>Thời lượng:</th><td>@Model.Minutes phút</td></tr>
+                <tr><th>Tổng tiền:</th><td><strong>@Model.TotalAmount.ToString("N0") VND</strong></td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Form Stripe -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm p-4">
+            <h5 class="mb-3">Thông tin thanh toán</h5>
+
+            <label for="card-element" class="form-label">Thông tin thẻ</label>
+            <div id="card-element" class="p-3 border rounded mb-2"></div>
+            <div id="card-errors" class="text-danger mb-3"></div>
+
+            <button id="pay-button" class="btn btn-success btn-lg w-100">Thanh toán ngay</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    const stripe = Stripe("@Model.PublishableKey");
+    const elements = stripe.elements();
+
+    // Style cho Stripe Elements
+    const cardStyle = {
+        style: {
+            base: {
+                fontSize: '16px',
+                color: '#32325d',
+                fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                '::placeholder': { color: '#a0aec0' },
+                padding: '10px 12px'
+            },
+            invalid: { color: '#fa755a', iconColor: '#fa755a' }
+        }
+    };
+
+    const card = elements.create('card', cardStyle);
+    card.mount('#card-element');
+
+    // Hiển thị lỗi realtime
+    card.on('change', function(event) {
+        const displayError = document.getElementById('card-errors');
+        displayError.textContent = event.error ? event.error.message : '';
+    });
+
+    document.getElementById('pay-button').addEventListener('click', async () => {
+        document.getElementById('pay-button').disabled = true;
+
+        const { error, paymentIntent } = await stripe.confirmCardPayment("@Model.ClientSecret", {
+            payment_method: { card: card }
+        });
+
+        if (error) {
+            document.getElementById('card-errors').textContent = error.message;
+            document.getElementById('pay-button').disabled = false;
+        } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+            window.location.href = `/Payment/Complete?payment_id=@Model.PaymentId&redirect_status=succeeded`;
+        }
+    });
+</script>

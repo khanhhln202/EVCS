@@ -1,0 +1,36 @@
+﻿@{
+    ViewData["Title"] = ViewBag.Title ?? "Kết quả thanh toán";
+    var isSuccess = (ViewBag.Title?.ToString().Contains("thành công") ?? false);
+}
+
+<div class="container text-center mt-5">
+    <h2 class="text-success">@ViewBag.Title</h2>
+    <p class="lead mt-3">@ViewBag.Message</p>
+
+    <div class="mt-4">
+        <p><strong>Mã thanh toán:</strong> @ViewBag.PaymentId</p>
+
+        @if (isSuccess)
+        {
+            <div class="alert alert-success mt-3">
+                Cảm ơn bạn đã thanh toán! Hệ thống đang xử lý đặt chỗ của bạn.
+            </div>
+
+            <div class="mt-4">
+                <a href="/" class="btn btn-outline-secondary">Về trang chủ</a>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning mt-3">
+                Có thể thanh toán chưa hoàn tất hoặc bị hủy. Vui lòng thử lại.
+            </div>
+
+            <div class="mt-4">
+                <a href="/Booking/Details/@ViewBag.PaymentId" class="btn btn-outline-primary">
+                    Quay lại đặt chỗ
+                </a>
+            </div>
+        }
+    </div>
+</div>

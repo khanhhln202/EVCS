@@ -36,7 +36,7 @@ namespace EVCS.Web.Controllers
             try
             {
                 var result = await _svc.CreateBookingAsync(req.PortId, driverId, Math.Clamp(req.Minutes ?? 15, 5, 180));
-                var checkoutUrl = Url.Page("/Payments/Checkout", new { id = result.PaymentId });
+                var checkoutUrl = Url.Action("Pay", "Payment", new { bookingId = result.BookingId });
                 return Ok(new { ok = true, redirectUrl = checkoutUrl, bookingCode = result.BookingCode });
             }
             catch (InvalidOperationException ex) when (ex.Message == "PORT_NOT_FOUND")
