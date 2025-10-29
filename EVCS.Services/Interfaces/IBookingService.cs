@@ -9,5 +9,7 @@ namespace EVCS.Services.Interfaces
     {
         Task<IReadOnlyList<AvailablePortDto>> GetAvailablePortsAsync(Guid chargerId);
         Task<BookResult> CreateBookingAsync(Guid portId, Guid driverId, int holdMinutes);
+
+        Task<List<BookingListItemDto>> GetMyBookingsAsync(string driverId);
     }
 }
