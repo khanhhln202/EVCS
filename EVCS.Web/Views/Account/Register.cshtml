@@ -1,0 +1,109 @@
+﻿@model EVCS.Services.DTOs.Auth.RegisterDto
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-person-plus-fill text-primary" style="font-size: 3rem;"></i>
+                        <h3 class="fw-bold mt-2">Tạo tài khoản mới</h3>
+                        <p class="text-muted">Tham gia hệ sinh thái EVCS ngay hôm nay</p>
+                    </div>
+
+                    <form asp-action="Register" method="post" id="registerForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label fw-semibold"></label>
+                            <input asp-for="FullName" class="form-control" placeholder="Nguyễn Văn A" autofocus />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold"></label>
+                            <input asp-for="Email" class="form-control" placeholder="example@gmail.com" id="emailInput" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                            <div id="emailExistsWarning" class="text-danger small d-none">
+                                <i class="bi bi-exclamation-circle"></i> Email này đã được sử dụng
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="0901234567" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label fw-semibold"></label>
+                            <input asp-for="Password" class="form-control" placeholder="••••••••" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Mật khẩu tối thiểu 6 ký tự
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label fw-semibold"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" placeholder="••••••••" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" id="submitBtn">
+                            <i class="bi bi-check-circle"></i> Đăng ký
+                        </button>
+
+                        <div class="text-center mt-3">
+                            <p class="text-muted mb-0">
+                                Đã có tài khoản? 
+                                <a asp-action="Login" class="text-decoration-none fw-semibold">Đăng nhập</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Real-time email validation
+        let emailCheckTimeout;
+        const emailInput = document.getElementById('emailInput');
+        const emailWarning = document.getElementById('emailExistsWarning');
+        const submitBtn = document.getElementById('submitBtn');
+
+        emailInput?.addEventListener('input', function() {
+            clearTimeout(emailCheckTimeout);
+            const email = this.value.trim();
+
+            if (!email || !email.includes('@@')) {
+                emailWarning.classList.add('d-none');
+                return;
+            }
+
+            emailCheckTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/Account/CheckEmail?email=${encodeURIComponent(email)}`);
+                    const data = await response.json();
+
+                    if (data.exists) {
+                        emailWarning.classList.remove('d-none');
+                        submitBtn.disabled = true;
+                    } else {
+                        emailWarning.classList.add('d-none');
+                        submitBtn.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Email check failed:', error);
+                }
+            }, 500);
+        });
+    </script>
+}

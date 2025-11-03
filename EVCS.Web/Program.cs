@@ -67,6 +67,7 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 // Add services
 builder.Services.AddScoped<EVCS.Services.Interfaces.IBookingService, EVCS.Services.Implementations.BookingService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Make cookie auth return 401/403 for API paths
 builder.Services.ConfigureApplicationCookie(options =>
@@ -131,5 +132,4 @@ app.MapControllerRoute(
 name: "default",
 pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapRazorPages(); // Map Razor Pages for Identity UI
 app.Run();
