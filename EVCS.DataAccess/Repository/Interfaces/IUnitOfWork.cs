@@ -1,4 +1,5 @@
 ﻿using EVCS.Models.Entities;
+using EVCS.Models.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,7 @@ namespace EVCS.DataAccess.Repository.Interfaces
         IRepository<IncidentReport> IncidentRepo { get; }
         IRepository<Notification> NotificationRepo { get; }
         IRepository<Vehicle> VehicleRepo { get; }
+        IRepository<ApplicationUser> UserRepo { get; }
 
 
         Task<int> SaveAsync();

@@ -1,6 +1,7 @@
 ﻿using EVCS.DataAccess.Data;
 using EVCS.DataAccess.Repository.Interfaces;
 using EVCS.Models.Entities;
+using EVCS.Models.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +24,7 @@ namespace EVCS.DataAccess.Repository
         public IRepository<IncidentReport> IncidentRepo { get; }
         public IRepository<Notification> NotificationRepo { get; }
         public IRepository<Vehicle> VehicleRepo { get; }
+        public IRepository<ApplicationUser> UserRepo { get; }
 
 
         public UnitOfWork(ApplicationDbContext db)
@@ -39,6 +41,7 @@ namespace EVCS.DataAccess.Repository
             IncidentRepo = new Repository<IncidentReport>(_db);
             NotificationRepo = new Repository<Notification>(_db);
             VehicleRepo = new Repository<Vehicle>(_db);
+            UserRepo = new Repository<ApplicationUser>(_db);
         }
 
 

@@ -99,6 +99,17 @@ namespace EVCS.Web.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        // GET /Account/AccessDenied
+        [HttpGet("AccessDenied")]
+        [AllowAnonymous]
+        public IActionResult AccessDenied(string? returnUrl = null)
+        {
+            _logger.LogWarning("Access denied for path: {ReturnUrl}", returnUrl ?? "unknown");
+
+            ViewData["ReturnUrl"] = returnUrl;
+            return View();
+        }
+
         // API endpoint để kiểm tra email (dùng cho AJAX validation)
         [HttpGet("CheckEmail")]
         [AllowAnonymous]
