@@ -1,0 +1,105 @@
+﻿@model List<BookingListItemDto>
+@using EVCS.Models.Enums
+@{
+    ViewData["Title"] = "Lịch sử Đặt chỗ";
+}
+
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h5 class="mb-0">@ViewData["Title"]</h5>
+    </div>
+    <div class="card-body">
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+
+        @if (!Model.Any())
+        {
+            <div class="text-center p-4 text-body-secondary">
+                <i class="bi bi-journal-x" style="font-size: 3rem;"></i>
+                <p class="mt-2">Bạn chưa có đặt chỗ nào.</p>
+                <a asp-controller="Stations" asp-action="List" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Tìm trạm sạc ngay
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã Đặt chỗ</th>
+                            <th>Trạm sạc</th>
+                            <th>Thời gian</th>
+                            <th>Trạng thái</th>
+                            <th>Thanh toán</th>
+                            <th class="text-end"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><strong>@item.BookingCode</strong></td>
+                                <td>@item.StationName</td>
+                                <td class="small">@item.HoldWindowText</td>
+                                <td>
+                                    @* Badge cho Trạng thái Booking *@
+                                    @if (item.BookingStatus == BookingStatus.Confirmed)
+                                    {
+                                        <span class="badge bg-success">Đã xác nhận</span>
+                                    }
+                                    else if (item.BookingStatus == BookingStatus.Pending)
+                                    {
+                                        <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@item.BookingStatus</span>
+                                    }
+                                </td>
+                                <td>
+                                    @* Badge cho Trạng thái Thanh toán *@
+                                    @if (item.PaymentStatus == PaymentStatus.Paid)
+                                    {
+                                        <span class="badge bg-success">Đã thanh toán</span>
+                                    }
+                                    else if (item.PaymentStatus == PaymentStatus.Created)
+                                    {
+                                        <span class="badge bg-info text-dark">Đang chờ</span>
+                                    }
+                                    else if (item.PaymentStatus == PaymentStatus.Failed)
+                                    {
+                                        <span class="badge bg-danger">Thất bại</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Chưa thanh toán</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a asp-controller="Booking" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                            Chi tiết
+                                        </a>
+
+                                        @* Nút Thanh toán nếu Booking đang Chờ (Pending) *@
+                                        @if (item.BookingStatus == BookingStatus.Pending)
+                                        {
+                                            <a asp-page="/Payments/Checkout" asp-route-id="@item.PaymentId" class="btn btn-sm btn-warning">
+                                                Thanh toán
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
