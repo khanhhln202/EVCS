@@ -1,39 +1,50 @@
-﻿using EVCS.DataAccess.Data;
-using EVCS.Models.Entities;
-using EVCS.Models.Enums;
+﻿using EVCS.Services.DTOs;
 using EVCS.Services.Interfaces;
-using EVCS.Services.Query;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace EVCS.Web.Controllers
 {
     public class StationsController : Controller
     {
-        private readonly IStationService _svc;
-        private readonly IStationQueryService _query;
-        private readonly ApplicationDbContext _db;
+        private readonly IStationService _stationService;
 
-        public StationsController(IStationService svc, IStationQueryService query, ApplicationDbContext db)
+        public StationsController(IStationService stationService)
         {
-            _svc = svc;
-            _query = query;
-            _db = db;
+            _stationService = stationService;
         }
 
+        #region Views
+
         public IActionResult Index() => RedirectToPage("/Stations/Browse");
+
         public IActionResult Map() => View();
+
         public IActionResult Browse() => View();
-        [HttpGet] public IActionResult List() => View();
 
         [HttpGet]
-        public async Task<IActionResult> MapData([FromQuery] string? city, [FromQuery] string? connectorType, [FromQuery] bool? openNow,
-                                                [FromQuery] string? chargerType, [FromQuery] decimal? minPowerKw, [FromQuery] decimal? maxPowerKw,
-                                                [FromQuery] bool? online)
+        public IActionResult List() => View();
+
+        #endregion
+
+        #region API Endpoints
+
+        /// <summary>
+        /// Get map data with filters for stations
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> MapData(
+            [FromQuery] string? city,
+            [FromQuery] string? connectorType,
+            [FromQuery] bool? openNow,
+            [FromQuery] string? chargerType,
+            [FromQuery] decimal? minPowerKw,
+            [FromQuery] decimal? maxPowerKw,
+            [FromQuery] bool? online)
         {
-            var criteria = new StationSearchCriteria
+            var criteria = new Services.DTOs.StationSearchCriteria
             {
                 City = city,
                 ConnectorType = connectorType,
@@ -42,34 +53,39 @@ namespace EVCS.Web.Controllers
                 MinPowerKw = minPowerKw,
                 MaxPowerKw = maxPowerKw
             };
-            var data = await _query.SearchAsync(criteria);
-            if (online.HasValue) data = data.Where(s => s.Online == online.Value).ToList();
+
+            var data = await _stationService.SearchAsync(criteria);
+
+            // Additional online filter
+            if (online.HasValue)
+            {
+                data = data.Where(s => s.Online == online.Value).ToList();
+            }
+
             return Json(data);
         }
 
-        // GET: available ports (status Available and not booked)
+        /// <summary>
+        /// Get available ports for a specific charger
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> AvailablePorts([FromQuery] Guid chargerId)
         {
-            var exists = await _db.ChargerUnits.AsNoTracking().AnyAsync(c => !c.IsDeleted && c.Id == chargerId);
-            if (!exists) return NotFound();
+            if (chargerId == Guid.Empty)
+            {
+                return BadRequest(new { error = "Invalid charger ID" });
+            }
 
-            var nowUtc = DateTime.UtcNow;
-            var activeBookedPorts = await _db.Bookings.AsNoTracking()
-                .Where(b => !b.IsDeleted
-                            && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed)
-                            && b.EndAtUtc > nowUtc)
-                .Select(b => b.ConnectorPortId)
-                .ToListAsync();
-            var booked = activeBookedPorts.ToHashSet();
+            var ports = await _stationService.GetAvailablePortsAsync(chargerId);
 
-            var ports = await _db.ConnectorPorts.AsNoTracking()
-                .Where(p => !p.IsDeleted && p.ChargerId == chargerId && p.Status == ConnectorPortStatus.Available && !booked.Contains(p.Id))
-                .OrderBy(p => p.IndexNo)
-                .Select(p => new { id = p.Id, indexNo = p.IndexNo, connectorType = p.ConnectorType, maxPowerKw = p.MaxPowerKw, pricePerKwh = p.DefaultPricePerKwh })
-                .ToListAsync();
+            if (!ports.Any())
+            {
+                return NotFound(new { error = "No available ports found" });
+            }
 
             return Json(ports);
         }
+
+        #endregion
     }
 }

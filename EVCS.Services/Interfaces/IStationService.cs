@@ -11,5 +11,8 @@ namespace EVCS.Services.Interfaces
     {
         Task<IReadOnlyList<StationListItemDto>> GetOnlineStationsAsync(string? city = null);
 
+        Task<IReadOnlyList<StationMapItemDto>> SearchAsync(StationSearchCriteria criteria);
+
+        Task<IReadOnlyList<AvailablePortDto>> GetAvailablePortsAsync(Guid chargerId);
     }
 }
