@@ -1,0 +1,124 @@
+﻿@model EVCS.Services.DTOs.Profile.UserProfileDto
+@{
+    ViewData["Title"] = "Thông tin tài khoản";
+}
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-person-circle text-primary" style="font-size: 5rem;"></i>
+                    </div>
+                    <h5 class="fw-bold">@Model.FullName</h5>
+                    <p class="text-muted small mb-3">@Model.Email</p>
+                    
+                    <div class="d-grid gap-2">
+                        <a asp-action="Edit" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-pencil"></i> Chỉnh sửa
+                        </a>
+                        <a asp-action="ChangePassword" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-key"></i> Đổi mật khẩu
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mt-3">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">Menu</h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" asp-action="Index">
+                                <i class="bi bi-person"></i> Thông tin cá nhân
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Bookings" asp-action="Index">
+                                <i class="bi bi-calendar-check"></i> Đặt chỗ của tôi
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-info-circle text-primary"></i> Thông tin tài khoản
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Personal Information -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-muted mb-3">Thông tin cá nhân</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="small text-muted">Họ và tên</label>
+                                <p class="fw-semibold">@(Model.FullName ?? "Chưa cập nhật")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted">Email</label>
+                                <p class="fw-semibold">
+                                    @Model.Email
+                                    @if (Model.EmailConfirmed)
+                                    {
+                                        <span class="badge bg-success-subtle text-success">
+                                            <i class="bi bi-check-circle"></i> Đã xác thực
+                                        </span>
+                                    }
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted">Số điện thoại</label>
+                                <p class="fw-semibold">
+                                    @(Model.PhoneNumber ?? "Chưa cập nhật")
+                                    @if (!string.IsNullOrEmpty(Model.PhoneNumber) && Model.PhoneNumberConfirmed)
+                                    {
+                                        <span class="badge bg-success-subtle text-success">
+                                            <i class="bi bi-check-circle"></i> Đã xác thực
+                                        </span>
+                                    }
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted">Ngày đăng ký</label>
+                                <p class="fw-semibold">@Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm")</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Invoice Information -->
+                    <div>
+                        <h6 class="fw-bold text-muted mb-3">Thông tin xuất hóa đơn</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="small text-muted">Tên hiển thị trên hóa đơn</label>
+                                <p class="fw-semibold">@(Model.InvoiceDisplayName ?? "Chưa cập nhật")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted">Email nhận hóa đơn</label>
+                                <p class="fw-semibold">@(Model.InvoiceEmail ?? "Chưa cập nhật")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted">Mã số thuế</label>
+                                <p class="fw-semibold">@(Model.TaxId ?? "Chưa cập nhật")</p>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="small text-muted">Địa chỉ xuất hóa đơn</label>
+                                <p class="fw-semibold">@(Model.InvoiceAddress ?? "Chưa cập nhật")</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

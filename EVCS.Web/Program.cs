@@ -1,4 +1,4 @@
-using EVCS.DataAccess.Data;
+﻿using EVCS.DataAccess.Data;
 using EVCS.DataAccess.DbInitializer;
 using EVCS.DataAccess.Repository;
 using EVCS.DataAccess.Repository.Interfaces;
@@ -21,30 +21,39 @@ var builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 builder.Host.UseSerilog();
 
-// DbContext + 
+// DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlServerOptions =>
     {
         sqlServerOptions.UseCompatibilityLevel(120);
     }));
+
 // Stripe Setting
 builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
 StripeConfiguration.ApiKey = builder.Configuration.GetValue<string>("Stripe:SecretKey");
-// Identity (GUID keys)
+
+// Identity (GUID keys) 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(opt =>
 {
     opt.Password.RequireDigit = false;
     opt.Password.RequireNonAlphanumeric = false;
     opt.Password.RequireUppercase = false;
     opt.Password.RequiredLength = 6;
+    
+    // Lockout configuration
+    opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    opt.Lockout.MaxFailedAccessAttempts = 5;
+    opt.Lockout.AllowedForNewUsers = true;
+    
+    // User validation
+    opt.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders()
-.AddDefaultUI();
+.AddDefaultTokenProviders();
 
-// Add services to the container.
+// Add services to the container
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages(); // Add Razor Pages support for Identity UI
+
 
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
@@ -65,12 +74,26 @@ builder.Services.AddScoped<IBookingPolicyService, BookingPolicyService>();
 builder.Services.AddScoped<IStationQueryService, StationQueryService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 
-// Add services
 builder.Services.AddScoped<EVCS.Services.Interfaces.IBookingService, EVCS.Services.Implementations.BookingService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
-// Make cookie auth return 401/403 for API paths
+// Configure Cookie Authentication
 builder.Services.ConfigureApplicationCookie(options =>
 {
+    // MVC paths
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    
+    // Cookie settings
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    options.SlidingExpiration = true;
+    
+    // API endpoints return 401/403 instead of redirect
     options.Events.OnRedirectToLogin = ctx =>
     {
         if (ctx.Request.Path.StartsWithSegments("/api"))
@@ -81,6 +104,7 @@ builder.Services.ConfigureApplicationCookie(options =>
         ctx.Response.Redirect(ctx.RedirectUri);
         return Task.CompletedTask;
     };
+    
     options.Events.OnRedirectToAccessDenied = ctx =>
     {
         if (ctx.Request.Path.StartsWithSegments("/api"))
@@ -102,14 +126,12 @@ using (var scope = app.Services.CreateScope())
     await init.InitializeAsync();
 }
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -118,18 +140,16 @@ app.UseSerilogRequestLogging();
 
 app.UseRouting();
 
-app.UseAuthentication();
+app.UseAuthentication(); // Phải đặt TRƯỚC UseAuthorization
 app.UseAuthorization();
 
-// Areas + default route
+// Routing
 app.MapControllerRoute(
-name: "areas",
-pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
-name: "default",
-pattern: "{controller=Home}/{action=Index}/{id?}");
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapRazorPages(); // Map Razor Pages for Identity UI
 app.Run();

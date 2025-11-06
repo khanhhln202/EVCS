@@ -1,0 +1,83 @@
+﻿@model EVCS.Services.DTOs.Profile.UpdateProfileDto
+@{
+    ViewData["Title"] = "Chỉnh sửa thông tin";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-pencil text-primary"></i> Chỉnh sửa thông tin tài khoản
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <!-- Personal Information -->
+                        <h6 class="fw-bold text-muted mb-3">Thông tin cá nhân</h6>
+                        
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label fw-semibold"></label>
+                            <input asp-for="FullName" class="form-control" placeholder="Nguyễn Văn A" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="0901234567" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+
+                        <hr />
+
+                        <!-- Invoice Information -->
+                        <h6 class="fw-bold text-muted mb-3">Thông tin xuất hóa đơn</h6>
+                        
+                        <div class="mb-3">
+                            <label asp-for="InvoiceDisplayName" class="form-label fw-semibold"></label>
+                            <input asp-for="InvoiceDisplayName" class="form-control" placeholder="Công ty TNHH ABC" />
+                            <span asp-validation-for="InvoiceDisplayName" class="text-danger small"></span>
+                            <div class="form-text">Để trống nếu sử dụng họ tên cá nhân</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="InvoiceEmail" class="form-label fw-semibold"></label>
+                            <input asp-for="InvoiceEmail" class="form-control" placeholder="invoice@company.com" />
+                            <span asp-validation-for="InvoiceEmail" class="text-danger small"></span>
+                            <div class="form-text">Để trống nếu sử dụng email tài khoản</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="TaxId" class="form-label fw-semibold"></label>
+                            <input asp-for="TaxId" class="form-control" placeholder="0123456789" />
+                            <span asp-validation-for="TaxId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="InvoiceAddress" class="form-label fw-semibold"></label>
+                            <textarea asp-for="InvoiceAddress" class="form-control" rows="3" 
+                                      placeholder="123 Đường ABC, Quận XYZ, TP. Hà Nội"></textarea>
+                            <span asp-validation-for="InvoiceAddress" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Lưu thay đổi
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

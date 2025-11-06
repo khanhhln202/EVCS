@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Handle unauthorized (401) explicitly
       if (res.status === 401) {
         const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-        window.location.href = `/Identity/Account/Login?returnUrl=${returnUrl}`;
+        window.location.href = `/Account/Login?returnUrl=${returnUrl}`;
         return;
       }
 

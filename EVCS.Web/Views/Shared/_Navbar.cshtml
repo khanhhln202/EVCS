@@ -27,6 +27,15 @@
                     </a>
                 </li>
 
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-controller="Bookings" asp-action="Index">
+                            <i class="bi bi-calendar-check"></i> Đặt chỗ của tôi
+                        </a>
+                    </li>
+                }
+
                 @if (SignInManager.IsSignedIn(User) && User.IsInRole(SD.RoleAdmin))
                 {
                     <li class="nav-item dropdown">
@@ -34,15 +43,17 @@
                             <i class="bi bi-gear"></i> Quản trị
                         </a>
                         <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" asp-area="Admin" asp-controller="Stations" asp-action="Index">Trạm sạc</a></li>
                             <li><a class="dropdown-item" asp-area="Admin" asp-controller="BookingPolicy" asp-action="Index">Chính sách đặt chỗ</a></li>
                         </ul>
                     </li>
                 }
-                <li class="nav-item">
-                    <a class="nav-link text-dark" asp-controller="Bookings" asp-action="Index"><i class="bi bi-list-ul"></i>Đặt chỗ của tôi</a>
-                    
-                </li>
             </ul>
 
             <div class="d-flex align-items-center gap-2">
@@ -54,18 +65,41 @@
 
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    <a class="btn btn-outline-secondary btn-sm" asp-page="/Account/Profile">
-                        <i class="bi bi-person-circle"></i> @User.Identity?.Name
-                    </a>
-                    <form class="d-inline" method="post"
-                          asp-area="Identity" asp-page="/Account/Logout"
-                          asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                        <button class="btn btn-outline-secondary btn-sm">Đăng xuất</button>
-                    </form>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i> @User.Identity?.Name
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index">
+                                    <i class="bi bi-person"></i> Thông tin tài khoản
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="ChangePassword">
+                                    <i class="bi bi-key"></i> Đổi mật khẩu
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form class="px-3" method="post" asp-area="" asp-controller="Account" asp-action="Logout">
+                                    @Html.AntiForgeryToken()
+                                    <button class="dropdown-item text-danger" type="submit">
+                                        <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
                 }
                 else
                 {
-                    <a class="btn btn-primary btn-sm" asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a>
+                    <a class="btn btn-outline-primary btn-sm" asp-area="" asp-controller="Account" asp-action="Login">
+                        <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                    </a>
+                    <a class="btn btn-primary btn-sm" asp-area="" asp-controller="Account" asp-action="Register">
+                        <i class="bi bi-person-plus"></i> Đăng ký
+                    </a>
                 }
             </div>
         </div>

@@ -1,0 +1,433 @@
+﻿@using EVCS.Services.DTOs.Dashboard
+@model DashboardStatsDto
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+        <i class="bi bi-speedometer2 text-primary"></i> Dashboard
+    </h2>
+    <div class="text-muted">
+        <i class="bi bi-calendar3"></i> @DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+    </div>
+</div>
+
+<!-- Tổng quan -->
+<div class="row g-3 mb-4">
+    <!-- Trạm sạc -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small mb-1">Tổng số trạm</div>
+                        <h3 class="mb-0 fw-bold">@Model.TotalStations</h3>
+                        <small class="text-success">
+                            <i class="bi bi-circle-fill"></i> @Model.OnlineStations online
+                        </small>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-ev-station text-primary fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thiết bị -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small mb-1">Tổng số cổng</div>
+                        <h3 class="mb-0 fw-bold">@Model.TotalPorts</h3>
+                        <small class="text-success">
+                            <i class="bi bi-check-circle"></i> @Model.AvailablePorts sẵn sàng
+                        </small>
+                    </div>
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-plug text-success fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Đặt chỗ -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small mb-1">Đặt chỗ hôm nay</div>
+                        <h3 class="mb-0 fw-bold">@Model.TodayBookings</h3>
+                        <small class="text-warning">
+                            <i class="bi bi-clock"></i> @Model.PendingBookings chờ xác nhận
+                        </small>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-calendar-check text-warning fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doanh thu -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small mb-1">Doanh thu hôm nay</div>
+                        <h3 class="mb-0 fw-bold">@Model.TodayRevenue.ToString("N0")₫</h3>
+                        <small class="text-info">
+                            <i class="bi bi-graph-up"></i> Tháng: @Model.MonthRevenue.ToString("N0")₫
+                        </small>
+                    </div>
+                    <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-cash-coin text-info fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chi tiết -->
+<div class="row g-3 mb-4">
+    <!-- Thống kê đặt chỗ -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-bar-chart text-primary"></i> Trạng thái đặt chỗ
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="vstack gap-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>
+                            <span class="badge bg-warning">Chờ xác nhận</span>
+                        </span>
+                        <span class="fw-bold">@Model.PendingBookings</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>
+                            <span class="badge bg-primary">Đã xác nhận</span>
+                        </span>
+                        <span class="fw-bold">@Model.ConfirmedBookings</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>
+                            <span class="badge bg-success">Hoàn thành</span>
+                        </span>
+                        <span class="fw-bold">@Model.CompletedBookings</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Người dùng -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-people text-success"></i> Người dùng
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="vstack gap-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Tổng số người dùng</span>
+                        <span class="fw-bold">@Model.TotalUsers</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="bi bi-plus-circle text-success"></i> Mới hôm nay
+                        </span>
+                        <span class="fw-bold text-success">@Model.NewUsersToday</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="bi bi-graph-up text-info"></i> Mới tháng này
+                        </span>
+                        <span class="fw-bold text-info">@Model.NewUsersThisMonth</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tài chính -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-wallet2 text-info"></i> Tổng quan tài chính
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="vstack gap-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Hôm nay</span>
+                        <span class="fw-bold">@Model.TodayRevenue.ToString("N0")₫</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Tháng này</span>
+                        <span class="fw-bold text-primary">@Model.MonthRevenue.ToString("N0")₫</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Tổng cộng</span>
+                        <span class="fw-bold text-success">@Model.TotalRevenue.ToString("N0")₫</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Biểu đồ -->
+<div class="row g-3 mb-4">
+    <!-- Xu hướng đặt chỗ -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-graph-up text-primary"></i> Xu hướng đặt chỗ (7 ngày)
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="bookingsTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Xu hướng doanh thu -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-cash-stack text-success"></i> Xu hướng doanh thu (7 ngày)
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top trạm -->
+<div class="row g-3">
+    <!-- Top theo booking -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-trophy text-warning"></i> Top 5 trạm nhiều đặt chỗ nhất
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (Model.TopStationsByBookings.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Tên trạm</th>
+                                    <th>Thành phố</th>
+                                    <th class="text-end">Số booking</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var (station, index) in Model.TopStationsByBookings.Select((s, i) => (s, i + 1)))
+                                {
+                                    <tr>
+                                        <td>
+                                            @if (index == 1)
+                                            {
+                                                <i class="bi bi-trophy-fill text-warning"></i>
+                                            }
+                                            else if (index == 2)
+                                            {
+                                                <i class="bi bi-trophy-fill text-secondary"></i>
+                                            }
+                                            else if (index == 3)
+                                            {
+                                                <i class="bi bi-trophy-fill" style="color: #cd7f32;"></i>
+                                            }
+                                            else
+                                            {
+                                                <span>@index</span>
+                                            }
+                                        </td>
+                                        <td>@station.Name</td>
+                                        <td>@station.City</td>
+                                        <td class="text-end fw-bold">@station.BookingsCount</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center mb-0">Chưa có dữ liệu</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Top theo doanh thu -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-currency-dollar text-success"></i> Top 5 trạm doanh thu cao nhất
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (Model.TopStationsByRevenue.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Tên trạm</th>
+                                    <th>Thành phố</th>
+                                    <th class="text-end">Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var (station, index) in Model.TopStationsByRevenue.Select((s, i) => (s, i + 1)))
+                                {
+                                    <tr>
+                                        <td>
+                                            @if (index == 1)
+                                            {
+                                                <i class="bi bi-trophy-fill text-warning"></i>
+                                            }
+                                            else if (index == 2)
+                                            {
+                                                <i class="bi bi-trophy-fill text-secondary"></i>
+                                            }
+                                            else if (index == 3)
+                                            {
+                                                <i class="bi bi-trophy-fill" style="color: #cd7f32;"></i>
+                                            }
+                                            else
+                                            {
+                                                <span>@index</span>
+                                            }
+                                        </td>
+                                        <td>@station.Name</td>
+                                        <td>@station.City</td>
+                                        <td class="text-end fw-bold text-success">@station.Revenue.ToString("N0")₫</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center mb-0">Chưa có dữ liệu</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Bookings Trend Chart
+    const bookingsCtx = document.getElementById('bookingsTrendChart');
+    const bookingsData = @Html.Raw(Json.Serialize(Model.BookingsTrend));
+    
+    new Chart(bookingsCtx, {
+        type: 'line',
+        data: {
+            labels: bookingsData.map(d => d.label),
+            datasets: [{
+                label: 'Số lượng đặt chỗ',
+                data: bookingsData.map(d => d.value),
+                borderColor: 'rgb(13, 110, 253)',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Revenue Trend Chart
+    const revenueCtx = document.getElementById('revenueTrendChart');
+    const revenueData = @Html.Raw(Json.Serialize(Model.RevenueTrend));
+    
+    new Chart(revenueCtx, {
+        type: 'bar',
+        data: {
+            labels: revenueData.map(d => d.label),
+            datasets: [{
+                label: 'Doanh thu (₫)',
+                data: revenueData.map(d => d.value),
+                backgroundColor: 'rgba(25, 135, 84, 0.7)',
+                borderColor: 'rgb(25, 135, 84)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return new Intl.NumberFormat('vi-VN', { 
+                                style: 'currency', 
+                                currency: 'VND' 
+                            }).format(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return new Intl.NumberFormat('vi-VN').format(value) + '₫';
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+}

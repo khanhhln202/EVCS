@@ -6,5 +6,11 @@ using System.Threading.Tasks;
 
 namespace EVCS.Models.Enums
 {
-    public enum PaymentStatus { Created, Paid, Failed, Expired }
+    public enum PaymentStatus 
+    { 
+        Created, 
+        Paid,      
+        Failed, 
+        Expired 
+    }
 }

@@ -29,5 +29,6 @@ namespace EVCS.Models.Entities
         public DateTime? UpdatedAt { get; set; }
 
         [Timestamp] public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+        public Booking? Booking { get; set; }
     }
 }
