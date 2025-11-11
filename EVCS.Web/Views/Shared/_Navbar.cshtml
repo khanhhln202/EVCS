@@ -36,7 +36,7 @@
                     </li>
                 }
 
-                @if (SignInManager.IsSignedIn(User) && User.IsInRole(SD.RoleAdmin))
+                @if (SignInManager.IsSignedIn(User) && (User.IsInRole(SD.RoleAdmin) || User.IsInRole(SD.RoleStaff)))
                 {
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -49,8 +49,21 @@
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" asp-area="Admin" asp-controller="Stations" asp-action="Index">Trạm sạc</a></li>
-                            <li><a class="dropdown-item" asp-area="Admin" asp-controller="BookingPolicy" asp-action="Index">Chính sách đặt chỗ</a></li>
+                            <li>
+                                <a class="dropdown-item" asp-area="Admin" asp-controller="Stations" asp-action="Index">
+                                    <i class="bi bi-ev-station"></i> Trạm sạc
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-area="Admin" asp-controller="BookingManagement" asp-action="Index">
+                                    <i class="bi bi-calendar-check"></i> Quản lý đặt chỗ
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-area="Admin" asp-controller="BookingPolicy" asp-action="Index">
+                                    <i class="bi bi-shield-check"></i> Chính sách đặt chỗ
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 }

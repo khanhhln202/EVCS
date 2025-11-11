@@ -50,11 +50,15 @@
                                     @* Badge cho Trạng thái Booking *@
                                     @if (item.BookingStatus == BookingStatus.Confirmed)
                                     {
-                                        <span class="badge bg-success">Đã xác nhận</span>
+                                        <span class="badge bg-secondary">Chờ xác nhận</span>
                                     }
                                     else if (item.BookingStatus == BookingStatus.Pending)
                                     {
                                         <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                                    }
+                                    else if (item.BookingStatus == BookingStatus.Completed)
+                                    {
+                                        <span class="badge bg-success">Thành Công</span>
                                     }
                                     else
                                     {

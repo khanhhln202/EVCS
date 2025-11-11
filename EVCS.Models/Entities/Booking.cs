@@ -20,7 +20,7 @@ namespace EVCS.Models.Entities
         public DateTime EndAtUtc { get; set; }
 
         public BookingStatus Status { get; set; } = BookingStatus.Pending;
-
+        public BookingType Type { get; set; }
 
         public decimal DepositAmount { get; set; }
         [MaxLength(8)] public string DepositCurrency { get; set; } = "VND";
