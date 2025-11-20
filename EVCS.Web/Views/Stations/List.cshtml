@@ -71,283 +71,415 @@
 
 <!-- Booking Modal -->
 <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="bookingLabel">Đặt chỗ trụ sạc</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="vstack gap-2">
-          <div class="small text-body-secondary">
-            <div><strong id="bk-station"></strong></div>
-            <div id="bk-charger"></div>
-          </div>
-          <div>
-            <label class="form-label">Chọn cổng</label>
-            <select id="bk-port" class="form-select"></select>
-            <div class="form-text" id="bk-port-help"></div>
-          </div>
-          <div>
-            <label class="form-label">Thời lượng giữ chỗ</label>
-            <div class="input-group">
-              <input id="bk-minutes" type="number" class="form-control" value="15" min="5" max="180" />
-              <span class="input-group-text">phút</span>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookingLabel">Đặt chỗ trụ sạc</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="form-text">Mặc định 15 phút (có thể đổi sau khi cấu hình Booking Policy).</div>
-          </div>
-          <div class="alert alert-warning d-none" id="bk-alert"></div>
+            <div class="modal-body">
+                <div class="vstack gap-3">
+                    <div class="small text-body-secondary">
+                        <div><strong id="bk-station"></strong></div>
+                        <div id="bk-charger"></div>
+                    </div>
+
+                    <!-- Booking Type Tabs -->
+                    <ul class="nav nav-tabs" id="bookingTypeTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="quick-tab" data-bs-toggle="tab" data-bs-target="#quick-hold" type="button" role="tab">
+                                <i class="bi bi-lightning-charge"></i> Giữ chỗ nhanh
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="reservation-tab" data-bs-toggle="tab" data-bs-target="#reservation" type="button" role="tab">
+                                <i class="bi bi-calendar-event"></i> Đặt lịch trước
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="bookingTypeTabContent">
+                        <!-- Quick Hold Tab -->
+                        <div class="tab-pane fade show active" id="quick-hold" role="tabpanel">
+                            <div class="vstack gap-3 p-3 bg-light rounded">
+                                <div>
+                                    <label class="form-label">Chọn cổng</label>
+                                    <select id="bk-port-quick" class="form-select"></select>
+                                    <div class="form-text" id="bk-port-quick-help"></div>
+                                </div>
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>Giữ chỗ nhanh:</strong> Giữ trụ ngay lập tức trong 15 phút.
+                                    Phí: <strong>30.000₫</strong>.
+                                    Nếu không đến sẽ tự động hủy.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reservation Tab -->
+                        <div class="tab-pane fade" id="reservation" role="tabpanel">
+                            <div class="vstack gap-3 p-3 bg-light rounded">
+                                <div>
+                                    <label class="form-label">Chọn cổng</label>
+                                    <select id="bk-port-reservation" class="form-select"></select>
+                                    <div class="form-text" id="bk-port-reservation-help"></div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Ngày giờ bắt đầu</label>
+                                        <input type="datetime-local" id="bk-start-time" class="form-control" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Thời lượng (phút)</label>
+                                        <select id="bk-duration" class="form-select">
+                                            <option value="30">30 phút</option>
+                                            <option value="45">45 phút</option>
+                                            <option value="60">60 phút</option>
+                                            <option value="90">90 phút</option>
+                                            <option value="120">120 phút</option>
+                                            <option value="180">180 phút</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>Đặt lịch trước:</strong>
+                                    <div class="mt-1">
+                                        • AC: 5.000₫/15 phút<br />
+                                        • DC: 10.000₫/15 phút<br />
+                                        • Thời lượng: 30-180 phút (bội số của 15)
+                                    </div>
+                                </div>
+                                <div id="bk-fee-estimate" class="alert alert-success d-none">
+                                    <strong>Phí dự kiến:</strong> <span id="bk-fee-amount"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning d-none" id="bk-alert"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="bk-submit">
+                    <i class="bi bi-check2-circle"></i> Xác nhận đặt chỗ
+                </button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
-        <button type="button" class="btn btn-primary" id="bk-submit">
-          <i class="bi bi-check2-circle"></i> Xác nhận đặt chỗ
-        </button>
-      </div>
     </div>
-  </div>
 </div>
 
 @section Scripts {
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const listEl = document.getElementById('list');
-  const resultCountEl = document.getElementById('result-count');
-  const canvasEl = document.getElementById('filterCanvas');
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const listEl = document.getElementById('list');
+          const resultCountEl = document.getElementById('result-count');
+          const canvasEl = document.getElementById('filterCanvas');
 
-  const numberVND = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
-  const formatKw = (kw) => {
-    if (!Number.isFinite(kw)) return '—';
-    const v = Number(kw);
-    const hasDecimal = Math.abs(v % 1) > 1e-6;
-    return `${hasDecimal ? v.toFixed(1) : v.toFixed(0)}kW`;
-  };
+          const numberVND = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+          const formatKw = (kw) => {
+            if (!Number.isFinite(kw)) return '—';
+            const v = Number(kw);
+            const hasDecimal = Math.abs(v % 1) > 1e-6;
+            return `${hasDecimal ? v.toFixed(1) : v.toFixed(0)}kW`;
+          };
 
-  // State for booking modal
-  let currentStation = null; // { id, name, city }
-  let currentCharger = null; // { id, type, maxPowerKw }
-  const $modal = new bootstrap.Modal(document.getElementById('bookingModal'));
-  const elStation = document.getElementById('bk-station');
-  const elCharger = document.getElementById('bk-charger');
-  const elPort = document.getElementById('bk-port');
-  const elPortHelp = document.getElementById('bk-port-help');
-  const elAlert = document.getElementById('bk-alert');
-  const elMinutes = document.getElementById('bk-minutes');
-  const btnSubmit = document.getElementById('bk-submit');
+          // Booking modal state
+          let currentStation = null;
+          let currentCharger = null;
+          const $modal = new bootstrap.Modal(document.getElementById('bookingModal'));
+          const elStation = document.getElementById('bk-station');
+          const elCharger = document.getElementById('bk-charger');
+          const elPortQuick = document.getElementById('bk-port-quick');
+          const elPortQuickHelp = document.getElementById('bk-port-quick-help');
+          const elPortReservation = document.getElementById('bk-port-reservation');
+          const elPortReservationHelp = document.getElementById('bk-port-reservation-help');
+          const elAlert = document.getElementById('bk-alert');
+          const btnSubmit = document.getElementById('bk-submit');
+          const elStartTime = document.getElementById('bk-start-time');
+          const elDuration = document.getElementById('bk-duration');
+          const elFeeEstimate = document.getElementById('bk-fee-estimate');
+          const elFeeAmount = document.getElementById('bk-fee-amount');
 
-  function showAlert(msg, type = 'warning') {
-    elAlert.classList.remove('d-none', 'alert-warning', 'alert-danger', 'alert-success');
-    elAlert.classList.add(`alert-${type}`);
-    elAlert.textContent = msg;
-  }
-  function hideAlert() {
-    elAlert.classList.add('d-none');
-    elAlert.textContent = '';
-  }
+          function showAlert(msg, type = 'warning') {
+            elAlert.classList.remove('d-none', 'alert-warning', 'alert-danger', 'alert-success');
+            elAlert.classList.add(`alert-${type}`);
+            elAlert.textContent = msg;
+          }
+          function hideAlert() {
+            elAlert.classList.add('d-none');
+            elAlert.textContent = '';
+          }
 
-  async function openBookingModal(station, charger) {
-    currentStation = station;
-    currentCharger = charger;
-    hideAlert();
-    elMinutes.value = '15';
+          function getActiveBookingType() {
+            const quickTab = document.getElementById('quick-tab');
+            return quickTab.classList.contains('active') ? 1 : 2; // 1=QuickHold, 2=Reservation
+          }
 
-    elStation.textContent = `${station.name} • ${station.city ?? ''}`.trim();
-    elCharger.textContent = `[${charger.type || '—'} - ${formatKw(charger.maxPowerKw)}]`;
+          function calculateFee(chargerType, durationMinutes) {
+            const blocks = durationMinutes / 15;
+            const feePerBlock = chargerType.includes('DC') ? 10000 : 5000;
+            return blocks * feePerBlock;
+          }
 
-    // Load available ports
-    elPort.innerHTML = `<option>Đang tải danh sách cổng...</option>`;
-    elPort.disabled = true;
-    elPortHelp.textContent = '';
+          function updateFeeEstimate() {
+            const duration = parseInt(elDuration.value);
+            if (!currentCharger || !duration) {
+              elFeeEstimate.classList.add('d-none');
+              return;
+            }
 
-    try {
-      // Call the API controller
-      const res = await fetch(`/api/booking/available-ports?chargerId=${encodeURIComponent(charger.id)}`);
-      const isJson = (res.headers.get('content-type') || '').includes('application/json');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const ports = isJson ? await res.json() : [];
-      if (!Array.isArray(ports) || ports.length === 0) {
-        elPort.innerHTML = `<option>Hết cổng trống</option>`;
-        elPort.disabled = true;
-        elPortHelp.textContent = '';
-      } else {
-        elPort.innerHTML = ports.map(p => {
-          const label = `Cổng #${p.indexNo} (${p.connectorType || '—'}) • ${numberVND.format(p.pricePerKwh)}/kWh`;
-          return `<option value="${p.id}">${label}</option>`;
-        }).join('');
-        elPort.disabled = false;
-        elPortHelp.textContent = `Có ${ports.length} cổng trống.`;
-      }
-    } catch (e) {
-      elPort.innerHTML = `<option>Lỗi tải dữ liệu</option>`;
-      elPort.disabled = true;
-      elPortHelp.textContent = '';
-      showAlert('Không tải được danh sách cổng. Vui lòng thử lại.', 'danger');
-    }
-    $modal.show();
-  }
+            const fee = calculateFee(currentCharger.type, duration);
+            elFeeAmount.textContent = numberVND.format(fee);
+            elFeeEstimate.classList.remove('d-none');
+          }
 
-  btnSubmit.addEventListener('click', async () => {
-    hideAlert();
-    const portId = elPort.value;
-    const minutes = parseInt(elMinutes.value || '15', 10);
-    if (!portId || portId === 'Hết cổng trống' || !Number.isFinite(minutes)) {
-      showAlert('Vui lòng chọn cổng và thời lượng hợp lệ.', 'warning');
-      return;
-    }
+          elDuration.addEventListener('change', updateFeeEstimate);
 
-    try {
-      const res = await fetch('/api/booking/book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ portId, minutes })
-      });
+          async function openBookingModal(station, charger) {
+            currentStation = station;
+            currentCharger = charger;
+            hideAlert();
+            elFeeEstimate.classList.add('d-none');
 
-      // Handle unauthorized (401) explicitly
-      if (res.status === 401) {
-        const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-        window.location.href = `/Account/Login?returnUrl=${returnUrl}`;
-        return;
-      }
+            elStation.textContent = `${station.name} • ${station.city ?? ''}`.trim();
+            elCharger.textContent = `[${charger.type || '—'} - ${formatKw(charger.maxPowerKw)}]`;
 
-      // Guard against non-JSON bodies (e.g., HTML error pages)
-      const isJson = (res.headers.get('content-type') || '').includes('application/json');
-      const data = isJson ? await res.json() : null;
+            // Set minimum start time to 10 minutes from now
+            const minStart = new Date(Date.now() + 10 * 60 * 1000);
+            elStartTime.min = minStart.toISOString().slice(0, 16);
+            elStartTime.value = minStart.toISOString().slice(0, 16);
 
-      if (!res.ok || !data || data.ok !== true || !data.redirectUrl) {
-        const msg = (data && data.message) ? data.message : `Đặt chỗ thất bại (HTTP ${res.status}).`;
-        showAlert(msg, 'danger');
-        return;
-      }
-      window.location.href = data.redirectUrl;
-    } catch {
-      showAlert('Không thể gửi yêu cầu. Vui lòng thử lại.', 'danger');
-    }
-  });
+            // Load available ports
+            await loadPorts(charger.id);
+            updateFeeEstimate();
+            $modal.show();
+          }
 
-  function buildChargerLines(s) {
-    if (Array.isArray(s.chargers) && s.chargers.length) {
-      return s.chargers.map(c => {
-        const id = c.id ?? c.Id; // tolerate both "id" and "Id"
-        const type = c.type || c.Type || '—';
-        const pwrVal = c.maxPowerKw ?? c.MaxPowerKw;
-        const pwr = formatKw(pwrVal);
-        const priceVal = c.pricePerKwh ?? c.PricePerKwh;
-        const price = Number.isFinite(priceVal) ? `${numberVND.format(priceVal)}/kWh` : '—';
-        const avail = Number.isFinite(c.available ?? c.Available) ? (c.available ?? c.Available) : 0;
-        const total = Number.isFinite(c.total ?? c.Total) ? (c.total ?? c.Total) : 0;
-        const canBook = avail > 0 && id;
-        const btn = canBook
-          ? ` <button type="button" class="btn btn-sm btn-primary btn-book"
-                 data-charger-id="${id}" data-charger-type="${type}" data-charger-power="${pwrVal ?? ''}">
-                 <i class="bi bi-clipboard-check"></i> Đặt chỗ</button>`
-          : ` <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
-                 <i class="bi bi-clipboard-x"></i> Hết chỗ</button>`;
-        return `<div class="d-flex justify-content-between align-items-center">
-                  <span>[${type} - ${pwr}] | slot trống ${avail}/${total} cổng | ${price}.</span>
-                  <span>${btn}</span>
-                </div>`;
-      }).join('');
-    }
-    // Fallback (legacy ports)
-    if (Array.isArray(s.ports) && s.ports.length) {
-      const groups = {};
-      s.ports.forEach(p => {
-        const key = p.connectorType || 'N/A';
-        if (!groups[key]) groups[key] = { total: 0, avail: 0, minPrice: null };
-        groups[key].total++;
-        if ((p.status || '').toLowerCase() === 'available') groups[key].avail++;
-        const price = Number(p.pricePerKwh);
-        if (Number.isFinite(price)) {
-          groups[key].minPrice = groups[key].minPrice == null ? price : Math.min(groups[key].minPrice, price);
-        }
-      });
-      return Object.entries(groups).map(([k, g]) => {
-        const price = g.minPrice != null ? `${numberVND.format(g.minPrice)}/kWh` : '—';
-        return `<div>[${k}] | slot trống ${g.avail}/${g.total} cổng | ${price}.</div>`;
-      }).join('');
-    }
-    return `<div class='text-body-secondary'>Chưa có dữ liệu cổng</div>`;
-  }
+          async function loadPorts(chargerId) {
+            elPortQuick.innerHTML = `<option>Đang tải...</option>`;
+            elPortReservation.innerHTML = `<option>Đang tải...</option>`;
+            elPortQuick.disabled = true;
+            elPortReservation.disabled = true;
 
-  async function loadData() {
-    const city = document.getElementById('f-city').value.trim();
-    const chargerType = document.getElementById('f-chargerType').value;
-    const minKw = parseFloat(document.getElementById('f-minKw').value);
-    const maxKw = parseFloat(document.getElementById('f-maxKw').value);
-    const status = document.getElementById('f-status').value;
+            try {
+              const res = await fetch(`/api/booking/available-ports?chargerId=${encodeURIComponent(chargerId)}`);
+              const isJson = (res.headers.get('content-type') || '').includes('application/json');
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              const ports = isJson ? await res.json() : [];
 
-    const url = new URL('/Stations/MapData', window.location.origin);
-    if (city) url.searchParams.set('city', city);
-    if (chargerType) url.searchParams.set('chargerType', chargerType);
-    if (!Number.isNaN(minKw)) url.searchParams.set('minPowerKw', String(minKw));
-    if (!Number.isNaN(maxKw)) url.searchParams.set('maxPowerKw', String(maxKw));
-    if (status === 'online') url.searchParams.set('online', 'true');
-    else if (status === 'offline') url.searchParams.set('online', 'false');
+              if (!Array.isArray(ports) || ports.length === 0) {
+                elPortQuick.innerHTML = `<option>Hết cổng trống</option>`;
+                elPortReservation.innerHTML = `<option>Hết cổng trống</option>`;
+              } else {
+                const html = ports.map(p => {
+                  const label = `Cổng #${p.indexNo} (${p.connectorType || '—'}) • ${numberVND.format(p.pricePerKwh)}/kWh`;
+                  return `<option value="${p.id}">${label}</option>`;
+                }).join('');
+                elPortQuick.innerHTML = html;
+                elPortReservation.innerHTML = html;
+                elPortQuick.disabled = false;
+                elPortReservation.disabled = false;
+                elPortQuickHelp.textContent = `Có ${ports.length} cổng trống.`;
+                elPortReservationHelp.textContent = `Có ${ports.length} cổng trống.`;
+              }
+            } catch (e) {
+              elPortQuick.innerHTML = `<option>Lỗi tải dữ liệu</option>`;
+              elPortReservation.innerHTML = `<option>Lỗi tải dữ liệu</option>`;
+              showAlert('Không tải được danh sách cổng. Vui lòng thử lại.', 'danger');
+            }
+          }
 
-    let data = [];
-    try {
-      const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
-      data = res.ok ? await res.json() : [];
-    } catch { data = []; }
+          btnSubmit.addEventListener('click', async () => {
+            hideAlert();
+            const bookingType = getActiveBookingType();
 
-    listEl.innerHTML = '';
-    if (!Array.isArray(data) || data.length === 0) {
-      listEl.innerHTML = `<div class="card shadow-sm"><div class="card-body text-center py-4 text-body-secondary">Không tìm thấy trạm phù hợp.</div></div>`;
-      resultCountEl.textContent = '0 trạm phù hợp';
-      return;
-    }
+            let portId, requestBody;
 
-    const frag = document.createDocumentFragment();
-    data.forEach(s => {
-      const hoursText = s.hours ? ` | Thời gian hoạt động ${s.hours}` : '';
-      const card = document.createElement('div');
-      card.className = 'card shadow-sm';
-      card.innerHTML = `
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="fw-semibold">${s.name}</div>
-              <div class="small text-body-secondary">${s.city ?? ''}${hoursText}</div>
-            </div>
-            <div class="btn-group">
-              ${Number.isFinite(s.lat) && Number.isFinite(s.lng) ? `
-              <a class="btn btn-outline-primary btn-sm" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=driving" target="_blank" rel="noopener" title="Mở Google Maps">
-                <i class="bi bi-sign-turn-right-fill"></i>
-              </a>` : ''}
-            </div>
-          </div>
-          <hr class="my-2"/>
-          <div class="small charger-list">${buildChargerLines(s)}</div>
-        </div>`;
+            if (bookingType === 1) { // Quick Hold
+              portId = elPortQuick.value;
+              if (!portId || portId === 'Hết cổng trống') {
+                showAlert('Vui lòng chọn cổng sạc.', 'warning');
+                return;
+              }
+              requestBody = {
+                portId: portId,
+                type: 1
+              };
+            } else { // Reservation
+              portId = elPortReservation.value;
+              const startTime = new Date(elStartTime.value);
+              const duration = parseInt(elDuration.value);
 
-      // Wire up booking buttons
-      const stationObj = { id: s.id, name: s.name, city: s.city };
-      setTimeout(() => {
-        card.querySelectorAll('.btn-book').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const chargerId = btn.getAttribute('data-charger-id');
-            const type = btn.getAttribute('data-charger-type');
-            const power = parseFloat(btn.getAttribute('data-charger-power') || 'NaN');
-            openBookingModal(stationObj, { id: chargerId, type, maxPowerKw: power });
+              if (!portId || portId === 'Hết cổng trống') {
+                showAlert('Vui lòng chọn cổng sạc.', 'warning');
+                return;
+              }
+
+              if (!elStartTime.value || isNaN(startTime.getTime())) {
+                showAlert('Vui lòng chọn thời gian bắt đầu.', 'warning');
+                return;
+              }
+
+              requestBody = {
+                portId: portId,
+                type: 2,
+                startAtUtc: startTime.toISOString(),
+                durationMinutes: duration
+              };
+            }
+
+            try {
+              const res = await fetch('/api/booking/book', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(requestBody)
+              });
+
+              if (res.status === 401) {
+                const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+                window.location.href = `/Account/Login?returnUrl=${returnUrl}`;
+                return;
+              }
+
+              const isJson = (res.headers.get('content-type') || '').includes('application/json');
+              const data = isJson ? await res.json() : null;
+
+              if (!res.ok || !data || data.ok !== true || !data.redirectUrl) {
+                const msg = (data && data.message) ? data.message : `Đặt chỗ thất bại (HTTP ${res.status}).`;
+                showAlert(msg, 'danger');
+                return;
+              }
+
+              window.location.href = data.redirectUrl;
+            } catch {
+              showAlert('Không thể gửi yêu cầu. Vui lòng thử lại.', 'danger');
+            }
           });
+
+          function buildChargerLines(s) {
+            if (Array.isArray(s.chargers) && s.chargers.length) {
+              return s.chargers.map(c => {
+                const id = c.id ?? c.Id;
+                const type = c.type || c.Type || '—';
+                const pwrVal = c.maxPowerKw ?? c.MaxPowerKw;
+                const pwr = formatKw(pwrVal);
+                const priceVal = c.pricePerKwh ?? c.PricePerKwh;
+                const price = Number.isFinite(priceVal) ? `${numberVND.format(priceVal)}/kWh` : '—';
+                const avail = Number.isFinite(c.available ?? c.Available) ? (c.available ?? c.Available) : 0;
+                const total = Number.isFinite(c.total ?? c.Total) ? (c.total ?? c.Total) : 0;
+                const canBook = avail > 0 && id;
+                const btn = canBook
+                  ? ` <button type="button" class="btn btn-sm btn-primary btn-book"
+                         data-charger-id="${id}" data-charger-type="${type}" data-charger-power="${pwrVal ?? ''}">
+                         <i class="bi bi-clipboard-check"></i> Đặt chỗ</button>`
+                  : ` <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+                         <i class="bi bi-clipboard-x"></i> Hết chỗ</button>`;
+                return `<div class="d-flex justify-content-between align-items-center">
+                          <span>[${type} - ${pwr}] | slot trống ${avail}/${total} cổng | ${price}.</span>
+                          <span>${btn}</span>
+                        </div>`;
+              }).join('');
+            }
+
+            if (Array.isArray(s.ports) && s.ports.length) {
+              const groups = {};
+              s.ports.forEach(p => {
+                const key = p.connectorType || 'N/A';
+                if (!groups[key]) groups[key] = { total: 0, avail: 0, minPrice: null };
+                groups[key].total++;
+                if ((p.status || '').toLowerCase() === 'available') groups[key].avail++;
+                const price = Number(p.pricePerKwh);
+                if (Number.isFinite(price)) {
+                  groups[key].minPrice = groups[key].minPrice == null ? price : Math.min(groups[key].minPrice, price);
+                }
+              });
+              return Object.entries(groups).map(([k, g]) => {
+                const price = g.minPrice != null ? `${numberVND.format(g.minPrice)}/kWh` : '—';
+                return `<div>[${k}] | slot trống ${g.avail}/${g.total} cổng | ${price}.</div>`;
+              }).join('');
+            }
+            return `<div class='text-body-secondary'>Chưa có dữ liệu cổng</div>`;
+          }
+
+          async function loadData() {
+            const city = document.getElementById('f-city').value.trim();
+            const chargerType = document.getElementById('f-chargerType').value;
+            const minKw = parseFloat(document.getElementById('f-minKw').value);
+            const maxKw = parseFloat(document.getElementById('f-maxKw').value);
+            const status = document.getElementById('f-status').value;
+
+            const url = new URL('/Stations/MapData', window.location.origin);
+            if (city) url.searchParams.set('city', city);
+            if (chargerType) url.searchParams.set('chargerType', chargerType);
+            if (!Number.isNaN(minKw)) url.searchParams.set('minPowerKw', String(minKw));
+            if (!Number.isNaN(maxKw)) url.searchParams.set('maxPowerKw', String(maxKw));
+            if (status === 'online') url.searchParams.set('online', 'true');
+            else if (status === 'offline') url.searchParams.set('online', 'false');
+
+            let data = [];
+            try {
+              const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
+              data = res.ok ? await res.json() : [];
+            } catch { data = []; }
+
+            listEl.innerHTML = '';
+            if (!Array.isArray(data) || data.length === 0) {
+              listEl.innerHTML = `<div class="card shadow-sm"><div class="card-body text-center py-4 text-body-secondary">Không tìm thấy trạm phù hợp.</div></div>`;
+              resultCountEl.textContent = '0 trạm phù hợp';
+              return;
+            }
+
+            const frag = document.createDocumentFragment();
+            data.forEach(s => {
+              const hoursText = s.hours ? ` | Thời gian hoạt động ${s.hours}` : '';
+              const card = document.createElement('div');
+              card.className = 'card shadow-sm';
+              card.innerHTML = `
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <div class="fw-semibold">${s.name}</div>
+                      <div class="small text-body-secondary">${s.city ?? ''}${hoursText}</div>
+                    </div>
+                    <div class="btn-group">
+                      ${Number.isFinite(s.lat) && Number.isFinite(s.lng) ? `
+                      <a class="btn btn-outline-primary btn-sm" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=driving" target="_blank" rel="noopener" title="Mở Google Maps">
+                        <i class="bi bi-sign-turn-right-fill"></i>
+                      </a>` : ''}
+                    </div>
+                  </div>
+                  <hr class="my-2"/>
+                  <div class="small charger-list">${buildChargerLines(s)}</div>
+                </div>`;
+
+              const stationObj = { id: s.id, name: s.name, city: s.city };
+              setTimeout(() => {
+                card.querySelectorAll('.btn-book').forEach(btn => {
+                  btn.addEventListener('click', () => {
+                    const chargerId = btn.getAttribute('data-charger-id');
+                    const type = btn.getAttribute('data-charger-type');
+                    const power = parseFloat(btn.getAttribute('data-charger-power') || 'NaN');
+                    openBookingModal(stationObj, { id: chargerId, type, maxPowerKw: power });
+                  });
+                });
+              });
+
+              frag.appendChild(card);
+            });
+
+            listEl.appendChild(frag);
+            resultCountEl.textContent = `${data.length} trạm phù hợp`;
+          }
+
+          document.getElementById('btn-search').addEventListener('click', async () => {
+            await loadData();
+            const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(canvasEl);
+            bsOffcanvas.hide();
+          });
+
+          loadData();
         });
-      });
-
-      frag.appendChild(card);
-    });
-
-    listEl.appendChild(frag);
-    resultCountEl.textContent = `${data.length} trạm phù hợp`;
-  }
-
-  document.getElementById('btn-search').addEventListener('click', async () => {
-    await loadData();
-    const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(canvasEl);
-    bsOffcanvas.hide();
-  });
-
-  loadData();
-});
-</script>
+    </script>
 }

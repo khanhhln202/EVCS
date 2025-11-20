@@ -7,9 +7,18 @@ namespace EVCS.Services.Interfaces
 {
     public interface IBookingService
     {
-        Task<IReadOnlyList<AvailablePortDto>> GetAvailablePortsAsync(Guid chargerId);
-        Task<BookResult> CreateBookingAsync(Guid portId, Guid driverId, int holdMinutes);
-
-        Task<List<BookingListItemDto>> GetMyBookingsAsync(string driverId);
+        Task<IReadOnlyList<PortAvailabilityDto>> GetAvailablePortsAsync(Guid chargerId);
+        
+        Task<BookResult> CreateBookingAsync(CreateBookingRequestDto request, Guid driverId);
+        
+        Task<IReadOnlyList<BookingListItemDto>> GetMyBookingsAsync(string userId);
+        
+        Task<IReadOnlyList<AvailableSlotDto>> GetAvailableSlotsAsync(
+            Guid portId, 
+            DateTime fromUtc, 
+            DateTime toUtc, 
+            int blockMinutes = 15);
+        
+        Task ExpirePendingPaymentsAsync(CancellationToken cancellationToken = default);
     }
 }

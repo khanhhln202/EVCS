@@ -1,4 +1,4 @@
-﻿@model List<BookingListItemDto>
+﻿@model List<EVCS.Services.DTOs.BookingListItemDto>
 @using EVCS.Models.Enums
 @{
     ViewData["Title"] = "Lịch sử Đặt chỗ";
@@ -12,7 +12,10 @@
 
         @if (TempData["Error"] != null)
         {
-            <div class="alert alert-danger">@TempData["Error"]</div>
+            <div class="alert alert-danger alert-dismissible fade show">
+                @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         }
 
         @if (!Model.Any())
@@ -32,11 +35,13 @@
                     <thead class="table-light">
                         <tr>
                             <th>Mã Đặt chỗ</th>
+                            <th>Loại</th>
                             <th>Trạm sạc</th>
                             <th>Thời gian</th>
+                            <th>Số tiền</th>
                             <th>Trạng thái</th>
                             <th>Thanh toán</th>
-                            <th class="text-end"></th>
+                            <th class="text-end">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -44,21 +49,26 @@
                         {
                             <tr>
                                 <td><strong>@item.BookingCode</strong></td>
+                                <td>
+                                    <span class="badge @(item.BookingType == BookingType.QuickHold ? "bg-warning text-dark" : "bg-info")">
+                                        @(item.BookingType == BookingType.QuickHold ? "Nhanh" : "Trước")
+                                    </span>
+                                </td>
                                 <td>@item.StationName</td>
                                 <td class="small">@item.HoldWindowText</td>
+                                <td><strong>@item.Amount.ToString("N0") @item.Currency</strong></td>
                                 <td>
-                                    @* Badge cho Trạng thái Booking *@
                                     @if (item.BookingStatus == BookingStatus.Confirmed)
                                     {
-                                        <span class="badge bg-secondary">Chờ xác nhận</span>
+                                        <span class="badge bg-success">Đã xác nhận</span>
                                     }
                                     else if (item.BookingStatus == BookingStatus.Pending)
                                     {
                                         <span class="badge bg-warning text-dark">Chờ thanh toán</span>
                                     }
-                                    else if (item.BookingStatus == BookingStatus.Completed)
+                                    else if (item.BookingStatus == BookingStatus.Cancelled)
                                     {
-                                        <span class="badge bg-success">Thành Công</span>
+                                        <span class="badge bg-secondary">Đã hủy</span>
                                     }
                                     else
                                     {
@@ -66,14 +76,17 @@
                                     }
                                 </td>
                                 <td>
-                                    @* Badge cho Trạng thái Thanh toán *@
                                     @if (item.PaymentStatus == PaymentStatus.Paid)
                                     {
                                         <span class="badge bg-success">Đã thanh toán</span>
                                     }
                                     else if (item.PaymentStatus == PaymentStatus.Created)
                                     {
-                                        <span class="badge bg-info text-dark">Đang chờ</span>
+                                        <span class="badge bg-info text-dark">Chờ</span>
+                                    }
+                                    else if (item.PaymentStatus == PaymentStatus.Expired)
+                                    {
+                                        <span class="badge bg-danger">Hết hạn</span>
                                     }
                                     else if (item.PaymentStatus == PaymentStatus.Failed)
                                     {
@@ -81,23 +94,22 @@
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary">Chưa thanh toán</span>
+                                        <span class="badge bg-secondary">@item.PaymentStatus</span>
                                     }
                                 </td>
                                 <td class="text-end">
-                                    <div class="btn-group">
-                                        <a asp-controller="Booking" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
-                                            Chi tiết
+                                    @if (item.BookingStatus == BookingStatus.Pending && item.PaymentStatus != PaymentStatus.Expired)
+                                    {
+                                        <a asp-controller="Payment" asp-action="Pay" asp-route-bookingId="@item.Id" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-credit-card"></i> Thanh toán
                                         </a>
-
-                                        @* Nút Thanh toán nếu Booking đang Chờ (Pending) *@
-                                        @if (item.BookingStatus == BookingStatus.Pending)
-                                        {
-                                            <a asp-page="/Payments/Checkout" asp-route-id="@item.PaymentId" class="btn btn-sm btn-warning">
-                                                Thanh toán
-                                            </a>
-                                        }
-                                    </div>
+                                    }
+                                    else
+                                    {
+                                        <a href="#" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Chi tiết
+                                        </a>
+                                    }
                                 </td>
                             </tr>
                         }

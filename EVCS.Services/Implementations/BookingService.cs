@@ -1,180 +1,323 @@
-using EVCS.DataAccess.Data;
+ï»¿using EVCS.DataAccess.Data;
 using EVCS.Models.Entities;
 using EVCS.Models.Enums;
 using EVCS.Services.DTOs;
 using EVCS.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace EVCS.Services.Implementations
 {
     public class BookingService : IBookingService
     {
         private readonly ApplicationDbContext _db;
-        public BookingService(ApplicationDbContext db) { _db = db; }
 
-        public async Task<IReadOnlyList<AvailablePortDto>> GetAvailablePortsAsync(Guid chargerId)
+        public BookingService(ApplicationDbContext db)
         {
-            var exists = await _db.ChargerUnits.AsNoTracking().AnyAsync(c => !c.IsDeleted && c.Id == chargerId);
-            if (!exists) return Array.Empty<AvailablePortDto>();
-
-            var nowUtc = DateTime.UtcNow;
-            var activeBooked = await _db.Bookings.AsNoTracking()
-                .Where(b => !b.IsDeleted
-                            && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed)
-                            && b.EndAtUtc > nowUtc)
-                .Select(b => b.ConnectorPortId)
-                .ToListAsync();
-            var bookedSet = activeBooked.ToHashSet();
-
-            var ports = await _db.ConnectorPorts.AsNoTracking()
-                .Where(p => !p.IsDeleted
-                            && p.ChargerId == chargerId
-                            && p.Status == ConnectorPortStatus.Available
-                            && !bookedSet.Contains(p.Id))
-                .OrderBy(p => p.IndexNo)
-                .Select(p => new AvailablePortDto(
-                    p.Id, p.IndexNo, p.ConnectorType, p.MaxPowerKw, p.DefaultPricePerKwh
-                ))
-                .ToListAsync();
-
-            return ports;
+            _db = db;
         }
 
-        public async Task<BookResult> CreateBookingAsync(Guid portId, Guid driverId, int holdMinutes)
+        public async Task<IReadOnlyList<PortAvailabilityDto>> GetAvailablePortsAsync(Guid chargerId)
         {
+            var charger = await _db.ChargerUnits
+                .AsNoTracking()
+                .Include(c => c.Ports)
+                .FirstOrDefaultAsync(c => c.Id == chargerId && !c.IsDeleted);
+
+            if (charger == null) return Array.Empty<PortAvailabilityDto>();
+
+            var now = DateTime.UtcNow;
+            var ports = charger.Ports.Where(p => !p.IsDeleted).ToList();
+
+            var result = new List<PortAvailabilityDto>();
+
+            foreach (var port in ports)
+            {
+                // Check if port has active booking or session
+                var hasActiveBooking = await _db.Bookings.AnyAsync(b =>
+                    b.ConnectorPortId == port.Id &&
+                    !b.IsDeleted &&
+                    b.Status == BookingStatus.Confirmed &&
+                    b.StartAtUtc <= now &&
+                    b.EndAtUtc >= now);
+
+                var hasActiveSession = await _db.ChargingSessions.AnyAsync(s =>
+                    s.ConnectorPortId == port.Id &&
+                    !s.IsDeleted &&
+                    s.Status == SessionStatus.Started);
+
+                if (!hasActiveBooking && !hasActiveSession && port.Status == ConnectorPortStatus.Available)
+                {
+                    result.Add(new PortAvailabilityDto
+                    {
+                        Id = port.Id,
+                        IndexNo = port.IndexNo,
+                        ConnectorType = port.ConnectorType,
+                        PricePerKwh = port.DefaultPricePerKwh
+                    });
+                }
+            }
+
+            return result;
+        }
+
+        public async Task<BookResult> CreateBookingAsync(CreateBookingRequestDto request, Guid driverId)
+        {
+            var policy = await _db.BookingPolicies.FirstOrDefaultAsync()
+                ?? throw new InvalidOperationException("POLICY_NOT_FOUND");
+
             var port = await _db.ConnectorPorts
                 .Include(p => p.Charger)
-                .ThenInclude(c => c.Station)
-                .FirstOrDefaultAsync(p => p.Id == portId && !p.IsDeleted);
-            if (port == null) throw new InvalidOperationException("PORT_NOT_FOUND");
-            if (port.Status != ConnectorPortStatus.Available) throw new InvalidOperationException("PORT_NOT_AVAILABLE");
+                .FirstOrDefaultAsync(p => p.Id == request.PortId && !p.IsDeleted)
+                ?? throw new InvalidOperationException("PORT_NOT_FOUND");
 
-            var nowUtc = DateTime.UtcNow;
-            var alreadyBooked = await _db.Bookings.AnyAsync(b =>
-                !b.IsDeleted && b.ConnectorPortId == port.Id
-                && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed)
-                && b.EndAtUtc > nowUtc);
-            if (alreadyBooked) throw new InvalidOperationException("PORT_ALREADY_BOOKED");
+            var now = DateTime.UtcNow;
+            DateTime startAtUtc;
+            DateTime endAtUtc;
+            decimal depositAmount;
 
-            var policy = await _db.BookingPolicies.AsNoTracking().OrderByDescending(x => x.CreatedAt).FirstOrDefaultAsync();
-            var isDc = string.Equals(port.Charger.Type, "DC", StringComparison.OrdinalIgnoreCase)
-                       || string.Equals(port.Charger.Type, "GB/T", StringComparison.OrdinalIgnoreCase);
-            var deposit = policy != null ? (isDc ? policy.DcDeposit : policy.AcDeposit) : (isDc ? 50000m : 30000m);
-            var hold = policy?.HoldMinutes ?? Math.Clamp(holdMinutes, 5, 180);
+            if (request.Type == BookingType.QuickHold)
+            {
+                // Giá»¯ chá»— nhanh - báº¯t Ä‘áº§u ngay
+                startAtUtc = now;
+                endAtUtc = now.AddMinutes(policy.QuickHoldMinutes);
+                depositAmount = policy.QuickHoldFee;
 
+                // Check port available NOW
+                var hasConflict = await _db.Bookings.AnyAsync(b =>
+                    b.ConnectorPortId == request.PortId &&
+                    !b.IsDeleted &&
+                    b.Status == BookingStatus.Confirmed &&
+                    b.StartAtUtc <= now &&
+                    b.EndAtUtc >= now);
+
+                if (hasConflict || port.Status != ConnectorPortStatus.Available)
+                    throw new InvalidOperationException("PORT_NOT_AVAILABLE");
+            }
+            else // Reservation
+            {
+                if (!request.StartAtUtc.HasValue || !request.DurationMinutes.HasValue)
+                    throw new InvalidOperationException("RESERVATION_REQUIRES_TIME");
+
+                var duration = request.DurationMinutes.Value;
+
+                // Validate duration
+                if (duration < policy.ReservationMinMinutes || duration > policy.ReservationMaxMinutes)
+                    throw new InvalidOperationException("INVALID_DURATION");
+
+                // Must be multiple of block minutes
+                if (duration % policy.ReservationBlockMinutes != 0)
+                    throw new InvalidOperationException("DURATION_NOT_BLOCK_ALIGNED");
+
+                startAtUtc = request.StartAtUtc.Value;
+                endAtUtc = startAtUtc.AddMinutes(duration);
+
+                // Must be in future
+                if (startAtUtc <= now.AddMinutes(5))
+                    throw new InvalidOperationException("START_TIME_TOO_SOON");
+
+                // Check overlap with existing bookings
+                var hasConflict = await _db.Bookings.AnyAsync(b =>
+                    b.ConnectorPortId == request.PortId &&
+                    !b.IsDeleted &&
+                    b.Status == BookingStatus.Confirmed &&
+                    b.StartAtUtc < endAtUtc &&
+                    b.EndAtUtc > startAtUtc);
+
+                if (hasConflict)
+                    throw new InvalidOperationException("TIME_SLOT_OCCUPIED");
+
+                // Calculate fee
+                var blocks = duration / 15;
+                var isDc = port.Charger?.Type?.Contains("DC") == true;
+                var feePerBlock = isDc
+                    ? policy.ReservationFeeDcPer15Min
+                    : policy.ReservationFeeAcPer15Min;
+
+                depositAmount = blocks * feePerBlock;
+            }
+
+            // Create booking
             var booking = new Booking
             {
                 Id = Guid.NewGuid(),
-                Code = $"BK-{DateTime.UtcNow:yyyyMMddHHmmss}-{port.IndexNo:D2}",
+                Code = GenerateBookingCode(),
                 DriverId = driverId,
-                ConnectorPortId = port.Id,
-                StartAtUtc = nowUtc,
-                EndAtUtc = nowUtc.AddMinutes(hold),
+                ConnectorPortId = request.PortId,
+                StartAtUtc = startAtUtc,
+                EndAtUtc = endAtUtc,
                 Status = BookingStatus.Pending,
-                DepositAmount = deposit,
-                DepositCurrency = "VND"
+                Type = request.Type,
+                DepositAmount = depositAmount,
+                DepositCurrency = "VND",
+                CreatedAt = now
             };
+
             _db.Bookings.Add(booking);
 
+            // Create payment
             var payment = new Payment
             {
                 Id = Guid.NewGuid(),
                 BookingId = booking.Id,
-                Provider = default,              // set to your real provider later
-                Kind = PaymentKind.Deposit,
-                Amount = deposit,
+                Amount = depositAmount,
                 Currency = "VND",
-                Status = PaymentStatus.Created
+                Provider = PaymentProvider.Stripe,
+                Kind = PaymentKind.Deposit,
+                Status = PaymentStatus.Created,
+                CreatedAt = now
             };
+
             _db.Payments.Add(payment);
-
             await _db.SaveChangesAsync();
-            return new BookResult(booking.Id, booking.Code, payment.Id, deposit, "VND");
+
+            return new BookResult(
+                booking.Id,
+                booking.Code,
+                payment.Id,
+                depositAmount,
+                "VND"
+            );
         }
-        public async Task<List<BookingListItemDto>> GetMyBookingsAsync(string driverId)
 
+        public async Task<IReadOnlyList<BookingListItemDto>> GetMyBookingsAsync(string userId)
         {
+            if (!Guid.TryParse(userId, out var driverId))
+                return Array.Empty<BookingListItemDto>();
 
-            var driverGuid = Guid.Parse(driverId);
-
-
-
-            // 1. Query t?t c? booking c?a user này
-
-            var bookings = await _db.Bookings.AsNoTracking()
-
-                .Where(b => b.DriverId == driverGuid && !b.IsDeleted)
-
-                .Include(b => b.ConnectorPort.Charger.Station)
-
-                .OrderByDescending(b => b.CreatedAt) // M?i nh?t lên ð?u
-
+            var bookings = await _db.Bookings
+                .AsNoTracking()
+                .Where(b => b.DriverId == driverId && !b.IsDeleted)
+                .Include(b => b.ConnectorPort)
+                    .ThenInclude(p => p.Charger)
+                    .ThenInclude(c => c.Station)
+                .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
+            var result = new List<BookingListItemDto>();
 
-
-            var bookingIds = bookings.Select(b => b.Id).ToList();
-
-
-
-            // 2. T?m Payment (thanh toán) m?i nh?t cho m?i booking
-
-            var latestPayments = await _db.Payments.AsNoTracking()
-
-                .Where(p => p.BookingId.HasValue && bookingIds.Contains(p.BookingId.Value))
-
-                .GroupBy(p => p.BookingId)
-
-                .Select(g => g.OrderByDescending(p => p.CreatedAt).First()) // L?y cái m?i nh?t
-
-                .ToDictionaryAsync(p => p.BookingId.Value, p => new { p.Id, p.Status });
-
-
-
-            // 3. Map sang DTO
-
-            var dtos = bookings.Select(b =>
-
+            foreach (var b in bookings)
             {
+                var payment = await _db.Payments
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.BookingId == b.Id);
 
-                // L?y thông tin thanh toán
+                var stationName = b.ConnectorPort?.Charger?.Station?.Name ?? "N/A";
+                var holdText = $"{b.StartAtUtc.ToLocalTime():dd/MM HH:mm} - {b.EndAtUtc.ToLocalTime():HH:mm}";
 
-                latestPayments.TryGetValue(b.Id, out var paymentInfo);
-
-
-
-                return new BookingListItemDto
-
+                result.Add(new BookingListItemDto
                 {
-
                     Id = b.Id,
-
                     BookingCode = b.Code,
-
-                    StationName = b.ConnectorPort?.Charger?.Station?.Name ?? "N/A",
-
-                    HoldWindowText = $"{b.StartAtUtc.ToLocalTime():HH:mm} - {b.EndAtUtc.ToLocalTime():HH:mm dd/MM}",
-
+                    StationName = stationName,
+                    HoldWindowText = holdText,
                     BookingStatus = b.Status,
-
+                    BookingType = b.Type,
+                    PaymentStatus = payment?.Status ?? PaymentStatus.Created,
                     Amount = b.DepositAmount,
-
                     Currency = b.DepositCurrency,
+                    PaymentId = payment?.Id ?? Guid.Empty
+                });
+            }
 
-                    // Gán thông tin Payment
+            return result;
+        }
 
-                    PaymentId = paymentInfo?.Id ?? Guid.Empty,
+        public async Task<IReadOnlyList<AvailableSlotDto>> GetAvailableSlotsAsync(
+            Guid portId,
+            DateTime fromUtc,
+            DateTime toUtc,
+            int blockMinutes = 15)
+        {
+            var policy = await _db.BookingPolicies.FirstOrDefaultAsync();
+            if (policy == null) return Array.Empty<AvailableSlotDto>();
 
-                    PaymentStatus = paymentInfo?.Status ?? PaymentStatus.Created // M?c ð?nh là 'Chýa TT'
+            var existingBookings = await _db.Bookings
+                .AsNoTracking()
+                .Where(b =>
+                    b.ConnectorPortId == portId &&
+                    !b.IsDeleted &&
+                    b.Status == BookingStatus.Confirmed &&
+                    b.StartAtUtc < toUtc &&
+                    b.EndAtUtc > fromUtc)
+                .OrderBy(b => b.StartAtUtc)
+                .Select(b => new { b.StartAtUtc, b.EndAtUtc })
+                .ToListAsync();
 
-                };
+            var slots = new List<AvailableSlotDto>();
+            var current = fromUtc;
 
-            }).ToList();
+            while (current < toUtc)
+            {
+                var slotEnd = current.AddMinutes(blockMinutes);
+                if (slotEnd > toUtc) break;
 
+                // Check if slot conflicts with any booking
+                var hasConflict = existingBookings.Any(b =>
+                    b.StartAtUtc < slotEnd && b.EndAtUtc > current);
 
+                if (!hasConflict)
+                {
+                    slots.Add(new AvailableSlotDto
+                    {
+                        StartAtUtc = current,
+                        EndAtUtc = slotEnd,
+                        DurationMinutes = blockMinutes
+                    });
+                }
 
-            return dtos;
+                current = slotEnd;
+            }
 
+            return slots;
+        }
+
+        public async Task ExpirePendingPaymentsAsync(CancellationToken cancellationToken = default)
+        {
+            var policy = await _db.BookingPolicies.FirstOrDefaultAsync(cancellationToken);
+            if (policy == null) return;
+
+            var cutoff = DateTime.UtcNow.AddMinutes(-policy.PaymentTimeoutMinutes);
+
+            var expiredPayments = await _db.Payments
+                .Where(p =>
+                    p.Status == PaymentStatus.Created &&
+                    p.CreatedAt < cutoff)
+                .ToListAsync(cancellationToken);
+
+            foreach (var payment in expiredPayments)
+            {
+                payment.Status = PaymentStatus.Expired;
+                payment.UpdatedAt = DateTime.UtcNow;
+
+                // Cancel associated booking
+                if (payment.BookingId.HasValue)
+                {
+                    var booking = await _db.Bookings.FindAsync(
+                        new object[] { payment.BookingId.Value }, 
+                        cancellationToken);
+                    
+                    if (booking != null && booking.Status == BookingStatus.Pending)
+                    {
+                        booking.Status = BookingStatus.Cancelled;
+                        booking.UpdatedAt = DateTime.UtcNow;
+                    }
+                }
+            }
+
+            if (expiredPayments.Any())
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        private string GenerateBookingCode()
+        {
+            return $"BK{DateTime.UtcNow:yyMMddHHmmss}{Random.Shared.Next(100, 999)}";
         }
     }
 }

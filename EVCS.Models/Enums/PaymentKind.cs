@@ -6,5 +6,10 @@ using System.Threading.Tasks;
 
 namespace EVCS.Models.Enums
 {
-    public enum PaymentKind { Deposit, Settlement, Refund }
+    public enum PaymentKind
+    {
+        Deposit = 0,
+        Charge = 1,
+        Refund = 2
+    }
 }

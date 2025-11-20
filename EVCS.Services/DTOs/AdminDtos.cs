@@ -53,16 +53,4 @@ namespace EVCS.Services.DTOs
         public ConnectorPortStatus Status { get; set; } = ConnectorPortStatus.Available;
         public byte[]? RowVersion { get; set; }
     }
-
-
-    public class BookingPolicyDto
-    {
-        public Guid Id { get; set; }
-        public decimal AcDeposit { get; set; }
-        public decimal DcDeposit { get; set; }
-        public int HoldMinutes { get; set; }
-        public int CancelFullRefundMinutes { get; set; }
-        public int CancelPartialRefundMinutes { get; set; }
-        public int NoShowPenaltyPercent { get; set; }
-    }
 }

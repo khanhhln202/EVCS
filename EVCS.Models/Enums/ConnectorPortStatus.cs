@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EVCS.Models.Enums
+﻿namespace EVCS.Models.Enums
 {
-    public enum ConnectorPortStatus { Available, InUse, OutOfService }
+    public enum ConnectorPortStatus
+    {
+        Available = 0,
+        Occupied = 1,
+        Reserved = 2,
+        Offline = 3,
+        Faulted = 4
+    }
 }
