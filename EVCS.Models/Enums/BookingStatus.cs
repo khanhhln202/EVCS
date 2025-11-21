@@ -13,6 +13,7 @@ namespace EVCS.Models.Enums
         Cancelled = 2,
         Completed = 3,
         NoShow = 4,
-        Expired = 5
+        Expired = 5,
+        Active = 6
     }
 }

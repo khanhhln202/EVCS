@@ -1,0 +1,292 @@
+﻿@using EVCS.Models.Enums
+@model EVCS.Services.DTOs.BookingDetail
+
+@{
+    ViewData["Title"] = "Chi tiết đặt chỗ";
+    var canCancel = Model.BookingStatus == BookingStatus.Pending || 
+                    Model.BookingStatus == BookingStatus.Confirmed;
+    var now = DateTime.UtcNow;
+    var hasStarted = Model.StartAtUtc.HasValue && Model.StartAtUtc.Value <= now;
+}
+
+<div class="container my-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Chi tiết đặt chỗ</h2>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Quay lại
+                </a>
+            </div>
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Card chính -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-receipt me-2"></i>@Model.BookingCode
+                        </h5>
+                        <span class="badge bg-light text-dark">
+                            @(Model.BookingType == BookingType.QuickHold ? "Giữ chỗ nhanh" : "Đặt trước")
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Trạng thái -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            @{
+                                var (statusText, statusColor) = Model.BookingStatus switch
+                                {
+                                    BookingStatus.Pending => ("Chờ thanh toán", "warning"),
+                                    BookingStatus.Confirmed => ("Đã xác nhận", "success"),
+                                    BookingStatus.Active => ("Đang hoạt động", "primary"),
+                                    BookingStatus.Completed => ("Hoàn thành", "info"),
+                                    BookingStatus.Cancelled => ("Đã hủy", "danger"),
+                                    BookingStatus.Expired => ("Đã hết hạn", "secondary"),
+                                    _ => ("Không xác định", "secondary")
+                                };
+                            }
+                            <div class="alert alert-@statusColor mb-0">
+                                <strong>Trạng thái:</strong> @statusText
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            @{
+                                var (paymentText, paymentColor) = Model.PaymentStatus switch
+                                {
+                                    PaymentStatus.Created => ("Chờ thanh toán", "warning"),
+                                    PaymentStatus.Pending => ("Đang xử lý", "info"),
+                                    PaymentStatus.Paid => ("Đã thanh toán", "success"),
+                                    PaymentStatus.Failed => ("Thất bại", "danger"),
+                                    PaymentStatus.Expired => ("Hết hạn", "secondary"),
+                                    PaymentStatus.Refunded => ("Đã hoàn tiền", "primary"),
+                                    _ => ("Không xác định", "secondary")
+                                };
+                            }
+                            <div class="alert alert-@paymentColor mb-0">
+                                <strong>Thanh toán:</strong> @paymentText
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Thông tin trạm -->
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-geo-alt-fill me-2"></i>Thông tin trạm sạc
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Tên trạm</label>
+                                <p class="fw-bold mb-0">@Model.StationName</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Địa chỉ</label>
+                                <p class="mb-0">@(Model.StationAddress ?? "N/A")</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Charger</label>
+                                <p class="mb-0">@Model.ChargerName</p>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="text-muted small">Port</label>
+                                <p class="mb-0"><span class="badge bg-secondary">Port @Model.PortIndex</span></p>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="text-muted small">Loại kết nối</label>
+                                <p class="mb-0">@(Model.ConnectorType ?? "N/A")</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Thông tin đặt chỗ -->
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-calendar-check me-2"></i>Thông tin đặt chỗ
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="text-muted small">Khung giờ giữ chỗ</label>
+                                <p class="fw-bold mb-0">@Model.HoldWindowText</p>
+                            </div>
+                            
+                            @if (Model.BookingType == BookingType.Reservation && Model.StartAtUtc.HasValue)
+                            {
+                                <div class="col-md-4 mb-3">
+                                    <label class="text-muted small">Thời gian bắt đầu</label>
+                                    <p class="mb-0">
+                                        @Model.StartAtUtc.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    </p>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="text-muted small">Thời gian kết thúc</label>
+                                    <p class="mb-0">
+                                        @Model.EndAtUtc?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    </p>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="text-muted small">Thời lượng</label>
+                                    <p class="mb-0">@Model.DurationMinutes phút</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Thông tin thanh toán -->
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-credit-card me-2"></i>Thông tin thanh toán
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Số tiền</label>
+                                <p class="fw-bold fs-5 text-success mb-0">
+                                    @Model.Amount.ToString("N0") @Model.Currency
+                                </p>
+                            </div>
+                            @if (Model.PaymentId.HasValue)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Mã thanh toán</label>
+                                    <p class="mb-0 font-monospace">@Model.PaymentId.Value.ToString().Substring(0, 8)...</p>
+                                </div>
+                            }
+                        </div>
+
+                        @if (Model.PaymentStatus == PaymentStatus.Created || Model.PaymentStatus == PaymentStatus.Pending)
+                        {
+                            <div class="alert alert-warning mt-3">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Vui lòng hoàn tất thanh toán để kích hoạt đặt chỗ.
+                                <a href="#" class="btn btn-sm btn-warning ms-2">
+                                    <i class="bi bi-credit-card me-1"></i>Thanh toán ngay
+                                </a>
+                            </div>
+                        }
+                    </div>
+
+                    <hr />
+
+                    <!-- Thông tin khác -->
+                    <div class="row text-muted small">
+                        <div class="col-md-6">
+                            <i class="bi bi-clock me-1"></i>
+                            Tạo lúc: @Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")
+                        </div>
+                        @if (Model.UpdatedAt.HasValue)
+                        {
+                            <div class="col-md-6 text-end">
+                                <i class="bi bi-clock-history me-1"></i>
+                                Cập nhật: @Model.UpdatedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Card footer với actions -->
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-list-ul me-1"></i> Danh sách đặt chỗ
+                        </a>
+                        
+                        @if (canCancel && !hasStarted)
+                        {
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                <i class="bi bi-x-circle me-1"></i> Hủy đặt chỗ
+                            </button>
+                        }
+                        else if (hasStarted && canCancel)
+                        {
+                            <button type="button" class="btn btn-secondary" disabled title="Không thể hủy đặt chỗ đã bắt đầu">
+                                <i class="bi bi-x-circle me-1"></i> Không thể hủy
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận hủy -->
+@if (canCancel && !hasStarted)
+{
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="cancelModalLabel">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Xác nhận hủy đặt chỗ
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Lưu ý quan trọng
+                        </h6>
+                        <hr>
+                        <ul class="mb-0">
+                            <li><strong>Hành động này không thể hoàn tác</strong></li>
+                            <li>Phí đặt chỗ <strong>@Model.Amount.ToString("N0") @Model.Currency</strong> sẽ <strong class="text-danger">KHÔNG được hoàn lại</strong></li>
+                            <li>Port sẽ được mở lại cho người dùng khác</li>
+                        </ul>
+                    </div>
+                    
+                    <p class="mb-0">
+                        Bạn có chắc chắn muốn hủy đặt chỗ <strong class="text-primary">@Model.BookingCode</strong>?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i>Đóng
+                    </button>
+                    <form asp-action="CancelFromDetails" asp-route-id="@Model.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Xác nhận hủy
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Auto dismiss alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert-dismissible').fadeOut('slow');
+        }, 5000);
+    </script>
+}

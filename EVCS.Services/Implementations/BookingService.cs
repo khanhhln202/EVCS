@@ -227,6 +227,195 @@ namespace EVCS.Services.Implementations
             return result;
         }
 
+        public async Task<BookingDetail?> GetBookingDetailsAsync(Guid bookingId)
+        {
+            var booking = await _db.Bookings
+                .AsNoTracking()
+                .Where(b => b.Id == bookingId && !b.IsDeleted)
+                .Include(b => b.ConnectorPort)
+                    .ThenInclude(p => p.Charger)
+                    .ThenInclude(c => c.Station)
+                .FirstOrDefaultAsync();
+
+            if (booking == null) return null;
+
+            var payment = await _db.Payments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.BookingId == booking.Id);
+
+            var port = booking.ConnectorPort;
+            var charger = port?.Charger;
+            var station = charger?.Station;
+
+            var holdText = $"{booking.StartAtUtc.ToLocalTime():dd/MM HH:mm} - {booking.EndAtUtc.ToLocalTime():HH:mm}";
+            var durationMinutes = (int)(booking.EndAtUtc - booking.StartAtUtc).TotalMinutes;
+
+            return new BookingDetail
+            {
+                Id = booking.Id,
+                BookingCode = booking.Code,
+
+                // Thông tin trạm
+                StationName = station?.Name ?? "N/A",
+                StationAddress = station?.Address,
+
+                // Thông tin charger & port
+                ChargerName = charger?.Name ?? "N/A",
+                PortIndex = port?.IndexNo ?? 0,
+                ConnectorType = port?.ConnectorType,
+
+                // Thông tin booking
+                BookingType = booking.Type,
+                BookingStatus = booking.Status,
+                HoldWindowText = holdText,
+                StartAtUtc = booking.StartAtUtc,
+                EndAtUtc = booking.EndAtUtc,
+                DurationMinutes = durationMinutes,
+
+                // Thông tin thanh toán
+                PaymentStatus = payment?.Status ?? PaymentStatus.Created,
+                Amount = booking.DepositAmount,
+                Currency = booking.DepositCurrency,
+                PaymentId = payment?.Id,
+
+                // Thông tin driver
+                DriverId = booking.DriverId.ToString(),
+
+                // Timestamp
+                CreatedAt = booking.CreatedAt,
+                UpdatedAt = booking.UpdatedAt
+            };
+        }
+
+        public async Task<CancelBookingResult> CancelBookingAsync(Guid bookingId, Guid driverId)
+        {
+            try
+            {
+                // 1. Lấy booking kèm related data
+                var booking = await _db.Bookings
+                    .Include(b => b.ConnectorPort)
+                    .FirstOrDefaultAsync(b => b.Id == bookingId && !b.IsDeleted);
+
+                // 2. Validate booking tồn tại
+                if (booking == null)
+                {
+                    return CancelBookingResult.FailureResult(
+                        "Không tìm thấy thông tin đặt chỗ.",
+                        "BOOKING_NOT_FOUND"
+                    );
+                }
+
+                // 3. Validate quyền sở hữu
+                if (booking.DriverId != driverId)
+                {
+                    return CancelBookingResult.FailureResult(
+                        "Bạn không có quyền hủy đặt chỗ này.",
+                        "UNAUTHORIZED"
+                    );
+                }
+
+                // 4. Validate trạng thái có thể hủy
+                if (booking.Status == BookingStatus.Cancelled)
+                {
+                    return CancelBookingResult.FailureResult(
+                        "Đặt chỗ đã được hủy trước đó.",
+                        "ALREADY_CANCELLED"
+                    );
+                }
+
+                if (booking.Status == BookingStatus.Completed)
+                {
+                    return CancelBookingResult.FailureResult(
+                        "Không thể hủy đặt chỗ đã hoàn thành.",
+                        "CANNOT_CANCEL_COMPLETED"
+                    );
+                }
+
+                if (booking.Status == BookingStatus.Active)
+                {
+                    return CancelBookingResult.FailureResult(
+                        "Không thể hủy đặt chỗ đang hoạt động. Vui lòng liên hệ hỗ trợ.",
+                        "CANNOT_CANCEL_ACTIVE"
+                    );
+                }
+
+                var now = DateTime.UtcNow;
+
+                // 5. Kiểm tra thời gian hủy (nếu đã quá thời gian bắt đầu)
+                if (booking.StartAtUtc <= now)
+                {
+                    return CancelBookingResult.FailureResult(
+                        "Không thể hủy đặt chỗ đã bắt đầu hoặc đã quá hạn.",
+                        "BOOKING_STARTED"
+                    );
+                }
+
+                // 6. Cập nhật trạng thái booking
+                booking.Status = BookingStatus.Cancelled;
+                booking.UpdatedAt = now;
+
+                // 7. Trả lại trạng thái available cho port (nếu đang bị hold)
+                if (booking.ConnectorPort != null)
+                {
+                    // Kiểm tra xem có booking khác đang active không
+                    var hasOtherActiveBooking = await _db.Bookings.AnyAsync(b =>
+                        b.ConnectorPortId == booking.ConnectorPortId &&
+                        b.Id != bookingId &&
+                        !b.IsDeleted &&
+                        b.Status == BookingStatus.Confirmed &&
+                        b.StartAtUtc <= now &&
+                        b.EndAtUtc >= now);
+
+                    // Kiểm tra session đang chạy
+                    var hasActiveSession = await _db.ChargingSessions.AnyAsync(s =>
+                        s.ConnectorPortId == booking.ConnectorPortId &&
+                        !s.IsDeleted &&
+                        s.Status == SessionStatus.Started);
+
+                    // Chỉ set available nếu không có booking/session khác
+                    if (!hasOtherActiveBooking && !hasActiveSession)
+                    {
+                        booking.ConnectorPort.Status = ConnectorPortStatus.Available;
+                        booking.ConnectorPort.UpdatedAt = now;
+                    }
+                }
+
+                // 8. Cập nhật payment status (nếu có)
+                var payment = await _db.Payments
+                    .FirstOrDefaultAsync(p => p.BookingId == bookingId);
+
+                if (payment != null)
+                {
+                    // Đánh dấu payment là cancelled (không hoàn tiền)
+                    if (payment.Status == PaymentStatus.Created || payment.Status == PaymentStatus.Pending)
+                    {
+                        payment.Status = PaymentStatus.Expired;
+                        payment.UpdatedAt = now;
+                    }
+                    else if (payment.Status == PaymentStatus.Paid)
+                    {
+                        // Nếu đã thanh toán, không hoàn tiền (giữ nguyên status Paid)
+                        // Có thể thêm note vào payment
+                        payment.UpdatedAt = now;
+                    }
+                }
+
+                // 9. Lưu thay đổi
+                await _db.SaveChangesAsync();
+
+                return CancelBookingResult.SuccessResult(
+                    "Hủy đặt chỗ thành công. Phí đặt chỗ sẽ không được hoàn lại."
+                );
+            }
+            catch (Exception ex)
+            {
+                return CancelBookingResult.FailureResult(
+                    $"Đã xảy ra lỗi khi hủy đặt chỗ: {ex.Message}",
+                    "SYSTEM_ERROR"
+                );
+            }
+        }
+
         public async Task<IReadOnlyList<AvailableSlotDto>> GetAvailableSlotsAsync(
             Guid portId,
             DateTime fromUtc,
@@ -298,9 +487,9 @@ namespace EVCS.Services.Implementations
                 if (payment.BookingId.HasValue)
                 {
                     var booking = await _db.Bookings.FindAsync(
-                        new object[] { payment.BookingId.Value }, 
+                        new object[] { payment.BookingId.Value },
                         cancellationToken);
-                    
+
                     if (booking != null && booking.Status == BookingStatus.Pending)
                     {
                         booking.Status = BookingStatus.Cancelled;

@@ -52,4 +52,66 @@ namespace EVCS.Services.DTOs
         public DateTime EndAtUtc { get; set; }
         public int DurationMinutes { get; set; }
     }
+
+    public class BookingDetail
+    {
+        public Guid Id { get; set; }
+        public string BookingCode { get; set; } = string.Empty;
+
+        // Thông tin trạm
+        public string StationName { get; set; } = string.Empty;
+        public string? StationAddress { get; set; }
+
+        // Thông tin charger & port
+        public string ChargerName { get; set; } = string.Empty;
+        public int PortIndex { get; set; }
+        public string? ConnectorType { get; set; }
+
+        // Thông tin booking
+        public BookingType BookingType { get; set; }
+        public BookingStatus BookingStatus { get; set; }
+        public string HoldWindowText { get; set; } = string.Empty;
+        public DateTime? StartAtUtc { get; set; }
+        public DateTime? EndAtUtc { get; set; }
+        public int? DurationMinutes { get; set; }
+
+        // Thông tin thanh toán
+        public PaymentStatus PaymentStatus { get; set; }
+        public decimal Amount { get; set; }
+        public string Currency { get; set; } = "VND";
+        public Guid? PaymentId { get; set; }
+
+        // Thông tin driver (để check quyền)
+        public string DriverId { get; set; } = string.Empty;
+
+        // Timestamp
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
+
+    public class CancelBookingResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public string? ErrorCode { get; set; }
+
+        public static CancelBookingResult SuccessResult(string message = "Hủy đặt chỗ thành công")
+        {
+            return new CancelBookingResult
+            {
+                Success = true,
+                Message = message
+            };
+        }
+
+        public static CancelBookingResult FailureResult(string message, string? errorCode = null)
+        {
+            return new CancelBookingResult
+            {
+                Success = false,
+                Message = message,
+                ErrorCode = errorCode
+            };
+        }
+    }
 }

@@ -13,6 +13,7 @@ namespace EVCS.Models.Enums
         Failed = 2,
         Cancelled = 3,
         Refunded = 4,
-        Expired = 5 
+        Expired = 5,
+        Pending = 6
     }
 }

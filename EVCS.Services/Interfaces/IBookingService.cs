@@ -20,5 +20,8 @@ namespace EVCS.Services.Interfaces
             int blockMinutes = 15);
         
         Task ExpirePendingPaymentsAsync(CancellationToken cancellationToken = default);
+        
+        Task<BookingDetail?> GetBookingDetailsAsync(Guid bookingId);
+        Task<CancelBookingResult> CancelBookingAsync(Guid bookingId, Guid driverId);
     }
 }
