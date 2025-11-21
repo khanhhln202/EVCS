@@ -38,6 +38,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "BookingManagement" ? "active" : "")"
+                               asp-area="Admin" asp-controller="BookingManagement" asp-action="Index">
+                                <i class="bi bi-calendar-check"></i> Quản lý đặt chỗ
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "BookingPolicy" ? "active" : "")" 
                                asp-area="Admin" asp-controller="BookingPolicy" asp-action="Index">
                                 <i class="bi bi-shield-check"></i> Chính sách

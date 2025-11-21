@@ -1,10 +1,6 @@
 ﻿using EVCS.Models.Enums;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EVCS.Models.Entities
 {
@@ -20,7 +16,7 @@ namespace EVCS.Models.Entities
         public DateTime EndAtUtc { get; set; }
 
         public BookingStatus Status { get; set; } = BookingStatus.Pending;
-
+        public BookingType Type { get; set; } = BookingType.QuickHold;
 
         public decimal DepositAmount { get; set; }
         [MaxLength(8)] public string DepositCurrency { get; set; } = "VND";

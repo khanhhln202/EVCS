@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace EVCS.Models.Enums
 {
-    public enum PaymentProvider { VNPay, MoMo,
-        Stripe
+    public enum PaymentProvider
+    {
+        Stripe = 0,
+        PayPal = 1,
+        VNPay = 2,
+        Cash = 3
     }
 }

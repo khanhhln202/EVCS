@@ -8,9 +8,12 @@ namespace EVCS.Models.Enums
 {
     public enum PaymentStatus 
     { 
-        Created, 
-        Paid,      
-        Failed, 
-        Expired 
+        Created = 0, 
+        Paid = 1,      
+        Failed = 2,
+        Cancelled = 3,
+        Refunded = 4,
+        Expired = 5,
+        Pending = 6
     }
 }

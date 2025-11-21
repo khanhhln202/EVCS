@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace EVCS.Models.Enums
 {
-    public enum PaymentKind
+    public enum BookingType
     {
-        Deposit = 0,
-        Charge = 1,
-        Refund = 2
+        QuickHold = 1,      // Giữ chỗ nhanh (15 phút)
+        Reservation = 2     // Đặt lịch trước (30-180 phút)
     }
 }

@@ -3,56 +3,151 @@
     ViewData["Title"] = "Thanh toán đặt chỗ";
 }
 
-<h2 class="mb-4">Thanh toán đặt chỗ</h2>
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Bookings" asp-action="Index">Đặt chỗ của tôi</a></li>
+            <li class="breadcrumb-item active">Thanh toán</li>
+        </ol>
+    </nav>
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
+    <h2 class="mb-4">Thanh toán đặt chỗ</h2>
 
-<div class="row">
-    <!-- Thông tin đặt chỗ -->
-    <div class="col-md-6 mb-4">
-        <div class="card shadow-sm p-4">
-            <h5 class="mb-3">Thông tin đặt chỗ</h5>
-            <table class="table table-borderless">
-                <tr><th>Mã đặt chỗ:</th><td>@Model.BookingCode</td></tr>
-                <tr><th>Trạm sạc:</th><td>@Model.StationName</td></tr>
-                <tr><th>Cổng sạc:</th><td>@Model.PortName</td></tr>
-                <tr><th>Thời lượng:</th><td>@Model.Minutes phút</td></tr>
-                <tr><th>Tổng tiền:</th><td><strong>@Model.TotalAmount.ToString("N0") VND</strong></td></tr>
-            </table>
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-    </div>
+    }
 
-    <!-- Form Stripe -->
-    <div class="col-md-6 mb-4">
-        <div class="card shadow-sm p-4">
-            <h5 class="mb-3">Thông tin thanh toán</h5>
+    <div class="row g-4">
+        <!-- Thông tin đặt chỗ -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Thông tin đặt chỗ</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Mã đặt chỗ:</span>
+                            <strong class="text-primary">@Model.BookingCode</strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Loại đặt chỗ:</span>
+                            <span class="badge @(Model.BookingType == EVCS.Models.Enums.BookingType.QuickHold ? "bg-warning text-dark" : "bg-info")">
+                                @Model.BookingTypeDisplay
+                            </span>
+                        </div>
+                    </div>
 
-            <label for="card-element" class="form-label">Thông tin thẻ</label>
-            <div id="card-element" class="p-3 border rounded mb-2"></div>
-            <div id="card-errors" class="text-danger mb-3"></div>
+                    <hr />
 
-            <button id="pay-button" class="btn btn-success btn-lg w-100">Thanh toán ngay</button>
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2"><i class="bi bi-geo-alt-fill"></i> Trạm sạc</h6>
+                        <p class="mb-1"><strong>@Model.StationFullName</strong></p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2"><i class="bi bi-plug-fill"></i> Cổng sạc</h6>
+                        <p class="mb-1">@Model.PortName</p>
+                        @if (!string.IsNullOrEmpty(Model.ChargerType))
+                        {
+                            <span class="badge bg-secondary">@Model.ChargerType</span>
+                        }
+                    </div>
+
+                    <hr />
+
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2"><i class="bi bi-clock-fill"></i> Thời gian</h6>
+                        <p class="mb-1">@Model.TimeRangeDisplay</p>
+                        <p class="small text-muted mb-0">Thời lượng: <strong>@Model.DurationMinutes phút</strong></p>
+                    </div>
+
+                    <hr />
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Tổng tiền:</h6>
+                        <h4 class="mb-0 text-success">@Model.TotalAmount.ToString("N0") @Model.Currency</h4>
+                    </div>
+
+                    @if (Model.BookingType == EVCS.Models.Enums.BookingType.QuickHold)
+                    {
+                        <div class="alert alert-info mb-0">
+                            <small>
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Giữ chỗ nhanh:</strong> Trụ sẽ được giữ trong @Model.DurationMinutes phút. 
+                                Vui lòng đến đúng giờ.
+                            </small>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            <small>
+                                <i class="bi bi-calendar-check"></i>
+                                <strong>Đặt lịch trước:</strong> Phí tính theo thời gian đã chọn.
+                            </small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Form thanh toán -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-credit-card"></i> Thông tin thanh toán</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Vui lòng nhập thông tin thẻ để hoàn tất thanh toán</p>
+
+                    <div class="mb-3">
+                        <label for="card-element" class="form-label fw-semibold">Thông tin thẻ</label>
+                        <div id="card-element" class="p-3 border rounded bg-light"></div>
+                        <div id="card-errors" class="text-danger mt-2"></div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <small>
+                            <i class="bi bi-shield-check"></i>
+                            Thông tin thanh toán được bảo mật bởi <strong>Stripe</strong>
+                        </small>
+                    </div>
+
+                    <button id="pay-button" class="btn btn-success btn-lg w-100 fw-semibold">
+                        <i class="bi bi-check-circle"></i> Thanh toán @Model.TotalAmount.ToString("N0") VND
+                    </button>
+
+                    <div class="text-center mt-3">
+                        <a asp-controller="Bookings" asp-action="Index" class="btn btn-link text-muted">
+                            <i class="bi bi-arrow-left"></i> Quay lại đặt chỗ của tôi
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
+@section Scripts {
 <script src="https://js.stripe.com/v3/"></script>
 <script>
     const stripe = Stripe("@Model.PublishableKey");
     const elements = stripe.elements();
 
-    // Style cho Stripe Elements
     const cardStyle = {
         style: {
             base: {
                 fontSize: '16px',
                 color: '#32325d',
                 fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-                '::placeholder': { color: '#a0aec0' },
-                padding: '10px 12px'
+                '::placeholder': { color: '#a0aec0' }
             },
             invalid: { color: '#fa755a', iconColor: '#fa755a' }
         }
@@ -61,24 +156,33 @@
     const card = elements.create('card', cardStyle);
     card.mount('#card-element');
 
-    // Hiển thị lỗi realtime
     card.on('change', function(event) {
         const displayError = document.getElementById('card-errors');
         displayError.textContent = event.error ? event.error.message : '';
     });
 
-    document.getElementById('pay-button').addEventListener('click', async () => {
-        document.getElementById('pay-button').disabled = true;
+    const payButton = document.getElementById('pay-button');
+    payButton.addEventListener('click', async () => {
+        payButton.disabled = true;
+        payButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
 
-        const { error, paymentIntent } = await stripe.confirmCardPayment("@Model.ClientSecret", {
-            payment_method: { card: card }
-        });
+        try {
+            const { error, paymentIntent } = await stripe.confirmCardPayment("@Model.ClientSecret", {
+                payment_method: { card: card }
+            });
 
-        if (error) {
-            document.getElementById('card-errors').textContent = error.message;
-            document.getElementById('pay-button').disabled = false;
-        } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-            window.location.href = `/Payment/Complete?payment_id=@Model.PaymentId&redirect_status=succeeded`;
+            if (error) {
+                document.getElementById('card-errors').textContent = error.message;
+                payButton.disabled = false;
+                payButton.innerHTML = '<i class="bi bi-check-circle"></i> Thanh toán @Model.TotalAmount.ToString("N0") VND';
+            } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+                window.location.href = `/Payment/Complete?payment_id=@Model.PaymentId&redirect_status=succeeded`;
+            }
+        } catch (err) {
+            document.getElementById('card-errors').textContent = 'Có lỗi xảy ra. Vui lòng thử lại.';
+            payButton.disabled = false;
+            payButton.innerHTML = '<i class="bi bi-check-circle"></i> Thanh toán @Model.TotalAmount.ToString("N0") VND';
         }
     });
 </script>
+}

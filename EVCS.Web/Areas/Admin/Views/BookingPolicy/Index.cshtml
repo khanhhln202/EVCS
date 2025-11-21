@@ -3,30 +3,114 @@
     ViewData["Title"] = "Chính sách đặt chỗ";
 }
 <div class="row g-3">
-    <div class="col-lg-8">
+    <div class="col-lg-10">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title mb-3">@ViewData["Title"]</h5>
                 <form method="post" class="row g-3" novalidate>
                     <input type="hidden" asp-for="Id" />
-                    <div class="col-md-4"><label asp-for="AcDeposit" class="form-label"></label><div class="input-group"><span class="input-group-text">₫</span><input asp-for="AcDeposit" class="form-control" /></div><div class="form-text">Cọc cho cổng AC</div></div>
-                    <div class="col-md-4"><label asp-for="DcDeposit" class="form-label"></label><div class="input-group"><span class="input-group-text">₫</span><input asp-for="DcDeposit" class="form-control" /></div><div class="form-text">Cọc cho cổng DC</div></div>
-                    <div class="col-md-4"><label asp-for="HoldMinutes" class="form-label"></label><input asp-for="HoldMinutes" class="form-control" /><div class="form-text">Giữ chỗ (phút)</div></div>
-                    <div class="col-md-4"><label asp-for="CancelFullRefundMinutes" class="form-label"></label><input asp-for="CancelFullRefundMinutes" class="form-control" /><div class="form-text">Hoàn 100% nếu huỷ trước (phút)</div></div>
-                    <div class="col-md-4"><label asp-for="CancelPartialRefundMinutes" class="form-label"></label><input asp-for="CancelPartialRefundMinutes" class="form-control" /><div class="form-text">Mốc hoàn một phần (phút)</div></div>
-                    <div class="col-md-4"><label asp-for="NoShowPenaltyPercent" class="form-label"></label><div class="input-group"><input asp-for="NoShowPenaltyPercent" class="form-control" /><span class="input-group-text">%</span></div><div class="form-text">Phạt vắng mặt</div></div>
-                    <div class="col-12"><button class="btn btn-primary"><i class="bi bi-save"></i> Lưu</button></div>
+                    
+                    <div class="col-12"><h6 class="text-primary border-bottom pb-2">Giữ chỗ nhanh (Quick Hold)</h6></div>
+                    <div class="col-md-6">
+                        <label asp-for="QuickHoldFee" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₫</span>
+                            <input asp-for="QuickHoldFee" class="form-control" />
+                        </div>
+                        <div class="form-text">Phí giữ chỗ nhanh cố định</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="QuickHoldMinutes" class="form-label"></label>
+                        <input asp-for="QuickHoldMinutes" class="form-control" />
+                        <div class="form-text">Thời gian giữ (phút)</div>
+                    </div>
+
+                    <div class="col-12 mt-4"><h6 class="text-primary border-bottom pb-2">Đặt lịch trước (Reservation)</h6></div>
+                    <div class="col-md-4">
+                        <label asp-for="ReservationFeeAcPer15Min" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₫</span>
+                            <input asp-for="ReservationFeeAcPer15Min" class="form-control" />
+                        </div>
+                        <div class="form-text">Phí AC mỗi 15 phút</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ReservationFeeDcPer15Min" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₫</span>
+                            <input asp-for="ReservationFeeDcPer15Min" class="form-control" />
+                        </div>
+                        <div class="form-text">Phí DC mỗi 15 phút</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ReservationBlockMinutes" class="form-label"></label>
+                        <input asp-for="ReservationBlockMinutes" class="form-control" />
+                        <div class="form-text">Khối thời gian tối thiểu</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ReservationMinMinutes" class="form-label"></label>
+                        <input asp-for="ReservationMinMinutes" class="form-control" />
+                        <div class="form-text">Tối thiểu (phút)</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ReservationMaxMinutes" class="form-label"></label>
+                        <input asp-for="ReservationMaxMinutes" class="form-control" />
+                        <div class="form-text">Tối đa (phút)</div>
+                    </div>
+
+                    <div class="col-12 mt-4"><h6 class="text-primary border-bottom pb-2">Thanh toán</h6></div>
+                    <div class="col-md-4">
+                        <label asp-for="PaymentTimeoutMinutes" class="form-label"></label>
+                        <input asp-for="PaymentTimeoutMinutes" class="form-control" />
+                        <div class="form-text">Thời gian chờ thanh toán (phút)</div>
+                    </div>
+
+                    <div class="col-12 mt-4"><h6 class="text-secondary border-bottom pb-2">Cài đặt cũ (Legacy - giữ tương thích)</h6></div>
+                    <div class="col-md-3">
+                        <label asp-for="AcDeposit" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₫</span>
+                            <input asp-for="AcDeposit" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="DcDeposit" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₫</span>
+                            <input asp-for="DcDeposit" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="HoldMinutes" class="form-label"></label>
+                        <input asp-for="HoldMinutes" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="NoShowPenaltyPercent" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="NoShowPenaltyPercent" class="form-control" />
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <button class="btn btn-primary px-4">
+                            <i class="bi bi-save"></i> Lưu thay đổi
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-lg-2">
         <div class="card">
             <div class="card-body">
-                <h6>Gợi ý</h6>
-                <ul class="small text-body-secondary mb-0">
-                    <li>AC: 30.000₫ • DC: 50.000₫</li>
-                    <li>Hold: 15 phút • No-show: 100%</li>
+                <h6>Gợi ý mặc định</h6>
+                <ul class="small text-body-secondary mb-0 ps-3">
+                    <li>Quick: 30k, 15 phút</li>
+                    <li>AC: 5k/15 phút</li>
+                    <li>DC: 10k/15 phút</li>
+                    <li>Timeout: 5 phút</li>
+                    <li>Block: 15 phút</li>
                 </ul>
             </div>
         </div>

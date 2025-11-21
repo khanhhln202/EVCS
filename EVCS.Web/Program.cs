@@ -3,12 +3,13 @@ using EVCS.DataAccess.DbInitializer;
 using EVCS.DataAccess.Repository;
 using EVCS.DataAccess.Repository.Interfaces;
 using EVCS.Models.Identity;
-using EVCS.Services.Admin;
 using EVCS.Services.Implementations;
 using EVCS.Services.Interfaces;
+using EVCS.Services.Interfaces.Admin;
 using EVCS.Services.Stripe;
 using EVCS.Utility;
 using EVCS.Utility.Options;
+using EVCS.Web.BackgroundServices;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -71,8 +72,9 @@ builder.Services.AddScoped<IChargerAdminService, ChargerAdminService>();
 builder.Services.AddScoped<IConnectorPortAdminService, ConnectorPortAdminService>();
 builder.Services.AddScoped<IBookingPolicyService, BookingPolicyService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-
-builder.Services.AddScoped<EVCS.Services.Interfaces.IBookingService, EVCS.Services.Implementations.BookingService>();
+builder.Services.AddScoped<IBookingManagementService, BookingManagementService>();
+builder.Services.AddScoped<PaymentExpirationService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 

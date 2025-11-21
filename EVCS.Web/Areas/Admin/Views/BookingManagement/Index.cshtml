@@ -139,7 +139,7 @@
                                 <td>
                                     <span class="font-monospace small">@item.Code</span>
                                     <br />
-                                    <small class="text-muted">@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                    <small class="text-muted">@item.CreatedAt.ToString("dd/MM/yyyy")</small>
                                 </td>
                                 <td>
                                     <div>@item.DriverName</div>
@@ -170,7 +170,7 @@
                                     @switch (item.Status)
                                     {
                                         case BookingStatus.Pending:
-                                            <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
                                             break;
                                         case BookingStatus.Confirmed:
                                             <span class="badge bg-primary">Chờ xác nhận</span>
